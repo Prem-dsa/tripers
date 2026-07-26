@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Bell, Menu, Sun, Moon, Search, Plus } from 'lucide-react';
+import { Bell, MapPin, Sun, Moon, Search, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
@@ -8,20 +8,23 @@ import { Avatar } from './index';
 
 export function Navbar() {
   const { user } = useAuthStore();
-  const { darkMode, toggleDarkMode, toggleMobileSidebar, toggleNotificationPanel } = useUIStore();
+  const { darkMode, toggleDarkMode, toggleNotificationPanel } = useUIStore();
   const { unreadCount } = useNotificationStore();
   const [searchQuery, setSearchQuery] = useState('');
   const navigate = useNavigate();
 
   return (
     <header className="h-16 sm:h-20 px-3 sm:px-6 lg:px-8 flex items-center justify-between border-b border-[#E9E2FF] bg-white/85 backdrop-blur-md sticky top-0 z-30 transition-all duration-300 gap-2">
-      {/* Mobile menu toggle */}
-      <button 
-        onClick={toggleMobileSidebar} 
-        className="lg:hidden btn-icon hover:bg-[#F3F0FF] text-[#6B5CA5] border-transparent rounded-xl flex-shrink-0"
-      >
-        <Menu size={20} />
-      </button>
+      {/* Mobile Branding / Logo */}
+      <div className="flex items-center gap-2 lg:hidden flex-shrink-0">
+        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#6D4AFF] to-[#8B5CF6] flex items-center justify-center shadow-glow-sm">
+          <MapPin size={14} className="text-white stroke-[2.5]" />
+        </div>
+        <div>
+          <p className="font-extrabold text-[#1E1B4B] text-xs leading-none tracking-tight">Tripers</p>
+          <p className="text-[#6D4AFF] text-[8px] font-bold tracking-wider mt-0.5">Split Smarter.</p>
+        </div>
+      </div>
 
       {/* Search Bar */}
       <div className="flex-1 max-w-md hidden sm:block">
@@ -47,13 +50,14 @@ export function Navbar() {
         {/* Quick add */}
         <motion.button
           onClick={() => navigate('/trips/new')}
-          className="btn-primary btn text-[10px] tracking-wider font-bold uppercase px-2.5 sm:px-4 py-2 sm:py-2.5 gap-0 sm:gap-2 rounded-xl shadow-glow-sm flex-shrink-0"
+          className="hidden sm:flex btn-primary btn text-[10px] tracking-wider font-bold uppercase px-2.5 sm:px-4 py-2 sm:py-2.5 gap-0 sm:gap-2 rounded-xl shadow-glow-sm flex-shrink-0"
           whileHover={{ scale: 1.02, y: -1 }}
           whileTap={{ scale: 0.98 }}
         >
           <Plus size={14} className="stroke-[2.5]" />
           <span className="hidden sm:inline">Quick Add</span>
         </motion.button>
+
 
         {/* Theme toggle */}
         <motion.button

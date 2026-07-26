@@ -66,7 +66,7 @@ export default function LoginPage() {
         <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)', backgroundSize: '32px 32px'}} />
 
         {/* 3D hero scene */}
-        <HeroScene className="absolute -top-10 -right-16 w-[420px] h-[420px] z-0" />
+        <HeroScene className="absolute inset-0 z-0 opacity-40 overflow-hidden" />
 
         <div className="flex items-center gap-3 relative z-10">
           <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex-center border border-white/30">

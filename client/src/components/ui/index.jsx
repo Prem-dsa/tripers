@@ -29,6 +29,10 @@ export function GlassCard({ children, className, hover = false, onClick, animate
   );
 }
 
+import { TiltCard } from './TiltCard';
+
+export { TiltCard };
+
 export function StatCard({ icon, label, value, sub, gradient = 'from-[#6D4AFF] to-[#8B5CF6]', trend, loading }) {
   if (loading) {
     return (
@@ -40,31 +44,33 @@ export function StatCard({ icon, label, value, sub, gradient = 'from-[#6D4AFF] t
     );
   }
   return (
-    <motion.div
-      className="bg-white border border-[#E9E2FF] p-6 rounded-[24px] flex flex-col gap-2 relative overflow-hidden group hover:border-[#D0C6FF] shadow-card hover:shadow-card-hover transition-all duration-500 cursor-default text-[#1E1B4B]"
-      initial={{ opacity: 0, y: 16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -3 }}
-    >
-      <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#6D4AFF]/5 to-[#8B5CF6]/0 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-700" />
-      
-      <div className={clsx('w-9 h-9 rounded-xl flex-center bg-gradient-to-br text-white shadow-sm border border-white/20', gradient)}>
-        {typeof icon === 'string' ? (
-          <span className="text-sm">{icon}</span>
-        ) : (
-          icon
+    <TiltCard className="h-full" maxTilt={8}>
+      <motion.div
+        className="bg-white border border-[#E9E2FF] p-6 rounded-[24px] flex flex-col gap-2 relative overflow-hidden group hover:border-[#D0C6FF] shadow-card hover:shadow-card-hover transition-all duration-500 cursor-default h-full text-[#1E1B4B]"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        whileHover={{ y: -3 }}
+      >
+        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#6D4AFF]/5 to-[#8B5CF6]/0 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-700" />
+        
+        <div className={clsx('w-9 h-9 rounded-xl flex-center bg-gradient-to-br text-white shadow-sm border border-white/20', gradient)}>
+          {typeof icon === 'string' ? (
+            <span className="text-sm">{icon}</span>
+          ) : (
+            icon
+          )}
+        </div>
+        <p className="text-[#6B5CA5] text-[10px] font-bold uppercase tracking-widest mt-1">{label}</p>
+        <p className="text-xl font-bold text-[#1E1B4B] tracking-tight mt-0.5">{value}</p>
+        {sub && <p className="text-[#6B5CA5] text-xs mt-1 font-medium">{sub}</p>}
+        {trend !== undefined && (
+          <p className={clsx('text-[10px] font-bold mt-1.5 flex items-center gap-1 uppercase tracking-wider', trend >= 0 ? 'text-green-600' : 'text-red-600')}>
+            {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}%
+          </p>
         )}
-      </div>
-      <p className="text-[#6B5CA5] text-[10px] font-bold uppercase tracking-widest mt-1">{label}</p>
-      <p className="text-xl font-bold text-[#1E1B4B] tracking-tight mt-0.5">{value}</p>
-      {sub && <p className="text-[#6B5CA5] text-xs mt-1 font-medium">{sub}</p>}
-      {trend !== undefined && (
-        <p className={clsx('text-[10px] font-bold mt-1.5 flex items-center gap-1 uppercase tracking-wider', trend >= 0 ? 'text-green-600' : 'text-red-600')}>
-          {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}%
-        </p>
-      )}
-    </motion.div>
+      </motion.div>
+    </TiltCard>
   );
 }
 

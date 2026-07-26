@@ -27,7 +27,7 @@ const bottomItems = [
 
 export function Sidebar() {
   const { user, logout } = useAuthStore();
-  const { sidebarOpen, sidebarMobile, toggleMobileSidebar, toggleSidebar } = useUIStore();
+  const { sidebarOpen, toggleSidebar } = useUIStore();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -66,12 +66,7 @@ export function Sidebar() {
           >
             <ChevronLeft size={16} className={clsx('transition-transform duration-300', !sidebarOpen && 'rotate-180')} />
           </button>
-          <button
-            onClick={toggleMobileSidebar}
-            className="flex lg:hidden btn-icon text-[#6B5CA5]"
-          >
-            <X size={16} />
-          </button>
+
         </div>
 
         {/* Navigation */}
@@ -80,7 +75,6 @@ export function Sidebar() {
             <NavLink
               key={item.to}
               to={item.to}
-              onClick={() => toggleMobileSidebar()}
               className={({ isActive }) => clsx(
                 'relative group flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-300 min-h-[46px] overflow-hidden',
                 isActive
@@ -138,7 +132,6 @@ export function Sidebar() {
               key={item.to}
               to={item.to}
               end
-              onClick={() => toggleMobileSidebar()}
               className={({ isActive }) => clsx(
                 'relative group flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-300 min-h-[46px] overflow-hidden',
                 isActive
@@ -200,39 +193,12 @@ export function Sidebar() {
   );
 
   return (
-    <>
-      {/* Desktop sidebar */}
-      <motion.aside
-        className="hidden lg:flex flex-col h-screen p-4 flex-shrink-0 z-30 bg-white border-r border-[#E9E2FF] shadow-sm"
-        animate={{ width: sidebarOpen ? 260 : 80 }}
-        transition={{ type: 'spring', damping: 26, stiffness: 240 }}
-      >
-        <SidebarContent />
-      </motion.aside>
-
-      {/* Mobile sidebar — drops down from the top of the screen */}
-      <AnimatePresence>
-        {sidebarMobile && (
-          <>
-            <motion.div
-              className="fixed inset-0 bg-[#1E1B4B]/30 backdrop-blur-sm z-40 lg:hidden"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={toggleMobileSidebar}
-            />
-            <motion.aside
-              className="fixed top-0 left-0 right-0 w-full max-h-[88vh] overflow-y-auto p-4 z-50 lg:hidden flex flex-col bg-white border-b border-[#E9E2FF] shadow-float rounded-b-[28px]"
-              initial={{ y: '-100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '-100%' }}
-              transition={{ type: 'spring', damping: 28, stiffness: 280 }}
-            >
-              <SidebarContent />
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+    <motion.aside
+      className="hidden lg:flex flex-col h-screen p-4 flex-shrink-0 z-30 bg-white border-r border-[#E9E2FF] shadow-sm"
+      animate={{ width: sidebarOpen ? 260 : 80 }}
+      transition={{ type: 'spring', damping: 26, stiffness: 240 }}
+    >
+      <SidebarContent />
+    </motion.aside>
   );
 }

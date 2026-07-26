@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { tripApi } from '../../api';
-import { GlassCard, Badge, EmptyState, Spinner, Avatar, ProgressBar } from '../../components/ui/index';
+import { GlassCard, Badge, EmptyState, Spinner, Avatar, ProgressBar, TiltCard } from '../../components/ui/index';
 import { formatCurrency } from '../../utils/currency';
 import { ConfirmModal } from '../../components/ui/Modal';
 import toast from 'react-hot-toast';
@@ -164,16 +164,17 @@ function TripCard({ trip, index, onDelete }) {
   const budgetPct = trip.budget > 0 ? Math.min(100, (trip.totalExpense / trip.budget) * 100) : 0;
 
   return (
-    <motion.div
-      variants={{
-        hidden: { opacity: 0, y: 16 },
-        show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 25 } }
-      }}
-      exit={{ opacity: 0, scale: 0.96 }}
-      whileHover={{ y: -4, scale: 1.01 }}
-      className="bg-white border border-[#E9E2FF] rounded-[24px] overflow-hidden hover:border-[#D0C6FF] hover:shadow-card-hover transition-all duration-500 cursor-pointer flex flex-col group shadow-card"
-      onClick={() => navigate(`/trips/${trip._id}`)}
-    >
+    <TiltCard className="h-full" maxTilt={8}>
+      <motion.div
+        variants={{
+          hidden: { opacity: 0, y: 16 },
+          show: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 260, damping: 25 } }
+        }}
+        exit={{ opacity: 0, scale: 0.96 }}
+        whileHover={{ y: -4, scale: 1.01 }}
+        className="bg-white border border-[#E9E2FF] rounded-[24px] overflow-hidden hover:border-[#D0C6FF] hover:shadow-card-hover transition-all duration-500 cursor-pointer flex flex-col group shadow-card h-full"
+        onClick={() => navigate(`/trips/${trip._id}`)}
+      >
       {/* Cover Image Header */}
       <div className="h-36 relative overflow-hidden bg-gradient-to-br from-[#6D4AFF]/5 to-[#8B5CF6]/5 border-b border-[#E9E2FF]">
         {trip.coverImage ? (
@@ -307,6 +308,7 @@ function TripCard({ trip, index, onDelete }) {
           </div>
         </div>
       </div>
-    </motion.div>
+      </motion.div>
+    </TiltCard>
   );
 }

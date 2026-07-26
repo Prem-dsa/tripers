@@ -106,7 +106,7 @@ export default function RegisterPage() {
       {/* Left panel */}
       <div className="hidden lg:flex flex-col flex-1 bg-gradient-to-br from-[#6D4AFF] via-[#8B5CF6] to-[#A855F7] p-14 relative z-10 justify-between overflow-hidden">
         <div className="absolute inset-0 opacity-10" style={{backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.4) 1px, transparent 0)', backgroundSize: '32px 32px'}} />
-        <HeroScene className="absolute -top-10 -right-16 w-[420px] h-[420px] z-0" />
+        <HeroScene className="absolute inset-0 z-0 opacity-40 overflow-hidden" />
 
         <div className="flex items-center gap-3 relative z-10">
           <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-xl flex-center border border-white/30">
