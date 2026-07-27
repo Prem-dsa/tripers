@@ -66,7 +66,7 @@ function minimizeCashFlow(balances) {
 }
 
 function calculateSettlements(expenses, members) {
-  const memberIds = members.map((m) => (m.user ? m.user.toString() : m.toString()));
+  const memberIds = members.map((m) => (m.user ? (m.user._id || m.user).toString() : m.toString()));
   const balances = calculateNetBalances(expenses, memberIds);
   const transactions = minimizeCashFlow(balances);
   return { balances, transactions };

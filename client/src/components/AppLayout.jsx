@@ -1,7 +1,6 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './ui/Sidebar';
 import { Navbar } from './ui/Navbar';
-import { BottomNav } from './ui/BottomNav';
 import { AmbientBackground } from './three/AmbientBackground';
 import { NotificationPanel } from './notifications/NotificationPanel';
 import { Toaster } from 'react-hot-toast';
@@ -25,7 +24,7 @@ export function AppLayout() {
   }, [isAuthenticated]);
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-[#F8F5FF]">
+    <div className="flex h-dvh overflow-hidden bg-[#F8FAFC]">
       <AmbientBackground />
       <Sidebar />
 
@@ -34,13 +33,11 @@ export function AppLayout() {
 
         {/* Page content */}
         <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="p-4 sm:p-6 pb-20 sm:pb-24 lg:pb-6 min-h-full max-w-full">
+          <div className="p-4 sm:p-6 pb-6 min-h-full max-w-full">
             <Outlet />
           </div>
         </main>
       </div>
-
-      <BottomNav />
 
 
       {/* Overlays */}

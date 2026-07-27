@@ -56,21 +56,21 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
   const totalExpense = memberStats.reduce((s, m) => s + (m.stats?.totalPaid || 0), 0) || 1;
 
   return (
-    <div className="space-y-6 text-[#1E1B4B]">
+    <div className="space-y-6 text-[#0F172A]">
       {/* Invite Member Section */}
       {isAdmin && (
-        <form onSubmit={handleAddMember} className="bg-white border border-[#E9E2FF] p-5 rounded-[22px] space-y-3.5 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#6D4AFF]/5 rounded-full blur-2xl pointer-events-none" />
-          <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#6B5CA5]">Invite Traveler by Email or Username</h4>
+        <form onSubmit={handleAddMember} className="bg-white border border-slate-200 p-5 rounded-[22px] space-y-3.5 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-[#4F46E5]/5 rounded-full blur-2xl pointer-events-none" />
+          <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Invite Traveler by Email or Username</h4>
           <div className="flex gap-3">
             <div className="relative flex-1">
-              <Mail size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B5CA5]" />
+              <Mail size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
               <input
                 type="text"
                 value={emailOrUsername}
                 onChange={(e) => setEmailOrUsername(e.target.value)}
                 placeholder="Enter email or username..."
-                className="input flex-1 pl-10 py-2.5 text-xs bg-[#F8F5FF] border-[#E9E2FF] focus:border-[#6D4AFF]"
+                className="input flex-1 pl-10 py-2.5 text-xs bg-slate-50 border-slate-200 focus:border-[#4F46E5]"
                 required
               />
             </div>
@@ -87,11 +87,11 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
 
       {/* Grid of travelers */}
       {!memberStats.length ? (
-        <EmptyState icon={<Users size={32} className="text-[#6D4AFF]" />} title="No travelers" />
+        <EmptyState icon={<Users size={32} className="text-[#4F46E5]" />} title="No travelers" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {memberStats.map((ms) => {
-            const memberInfo = trip.members?.find(m => m.user?._id === ms.user?._id);
+            const memberInfo = trip.members?.find(m => (m.user?._id || m.user) === ms.user?._id);
             const role = memberInfo?.role || 'member';
             const isCreator = trip.createdBy?._id === ms.user?._id;
             const netBal = ms.stats?.netBalance || 0;
@@ -100,14 +100,14 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
             const isOnline = ms.user?._id === user?._id || Math.abs(ms.user?.fullName.charCodeAt(0) || 0) % 2 === 0;
 
             return (
-              <div key={ms.user?._id} className="bg-white border border-[#E9E2FF] p-5 rounded-[22px] flex flex-col justify-between hover:border-[#D0C6FF] hover:shadow-card transition-all duration-300 shadow-sm relative group">
+              <div key={ms.user?._id} className="bg-white border border-slate-200 p-5 rounded-[22px] flex flex-col justify-between hover:border-slate-300 hover:shadow-card transition-all duration-300 shadow-sm relative group">
                 <div className="flex items-start justify-between gap-4">
                   <button onClick={() => navigate(`/members/${ms.user?._id}`)} className="flex-shrink-0 relative">
                     <Avatar
                       src={ms.user?.photo}
                       name={ms.user?.fullName}
                       size="lg"
-                      className="ring-2 ring-[#EDE8FF] hover:ring-[#6D4AFF]/30 transition-all rounded-full"
+                      className="ring-2 ring-slate-100 hover:ring-[#4F46E5]/30 transition-all rounded-full"
                     />
                     {isOnline && (
                       <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] rounded-full ring-2 ring-white shadow-[0_0_8px_rgba(34,197,94,0.4)]" title="Online" />
@@ -118,7 +118,7 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <button
                         onClick={() => navigate(`/members/${ms.user?._id}`)}
-                        className="text-[#1E1B4B] text-xs font-bold hover:text-[#6D4AFF] transition-colors truncate max-w-[130px]"
+                        className="text-[#0F172A] text-xs font-bold hover:text-[#4F46E5] transition-colors truncate max-w-[130px]"
                       >
                         {ms.user?.fullName}
                       </button>
@@ -126,8 +126,8 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
                       {role === 'admin' && !isCreator && <Badge variant="warning" className="text-[7px]">Admin</Badge>}
                       {ms.user?._id === user?._id && <Badge variant="gray" className="text-[7px]">You</Badge>}
                     </div>
-                    <p className="text-[#6B5CA5] text-[9px] font-bold uppercase tracking-wider mt-1.5">@{ms.user?.username}</p>
-                    {ms.user?.phone && <p className="text-[#6B5CA5] text-[9px] mt-1">{ms.user.phone}</p>}
+                    <p className="text-slate-500 text-[9px] font-bold uppercase tracking-wider mt-1.5">@{ms.user?.username}</p>
+                    {ms.user?.phone && <p className="text-slate-500 text-[9px] mt-1">{ms.user.phone}</p>}
                   </div>
 
                   {/* Admin actions */}
@@ -136,7 +136,7 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
                       {!isCreator && role !== 'admin' && (
                         <button
                           onClick={() => adminMutation.mutate(ms.user?._id)}
-                          className="btn-icon w-8 h-8 rounded-lg hover:bg-[#F3F0FF] hover:border-[#E9E2FF] text-[#6B5CA5] hover:text-[#6D4AFF]"
+                          className="btn-icon w-8 h-8 rounded-lg hover:bg-slate-50 hover:border-slate-200 text-slate-500 hover:text-[#4F46E5]"
                           title="Assign Admin"
                         >
                           <Shield size={12} />
@@ -145,7 +145,7 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
                       {!isCreator && (
                         <button
                           onClick={() => setRemoveTarget(ms.user)}
-                          className="btn-icon w-8 h-8 rounded-lg hover:bg-red-50 hover:border-red-100 text-[#6B5CA5] hover:text-red-550"
+                          className="btn-icon w-8 h-8 rounded-lg hover:bg-red-50 hover:border-red-200 text-slate-500 hover:text-red-600"
                           title="Remove Member"
                         >
                           <UserMinus size={12} />
@@ -157,17 +157,17 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
 
                 {/* Balance statistics */}
                 <div className="mt-4 grid grid-cols-3 gap-2.5 text-center">
-                  <div className="bg-[#F8F5FF] border border-[#E9E2FF] p-2 rounded-xl">
-                    <p className="text-[#6B5CA5] text-[8px] font-bold uppercase tracking-widest">Paid</p>
-                    <p className="text-[#1E1B4B] font-extrabold text-xs mt-1">₹{formatCurrency(ms.stats?.totalPaid)}</p>
+                  <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                    <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Paid</p>
+                    <p className="text-[#0F172A] font-extrabold text-xs mt-1">₹{formatCurrency(ms.stats?.totalPaid)}</p>
                   </div>
-                  <div className="bg-[#F8F5FF] border border-[#E9E2FF] p-2 rounded-xl">
-                    <p className="text-[#6B5CA5] text-[8px] font-bold uppercase tracking-widest">Share</p>
-                    <p className="text-[#1E1B4B] font-extrabold text-xs mt-1">₹{formatCurrency(ms.stats?.totalShare)}</p>
+                  <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                    <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Share</p>
+                    <p className="text-[#0F172A] font-extrabold text-xs mt-1">₹{formatCurrency(ms.stats?.totalShare)}</p>
                   </div>
-                  <div className="bg-[#F8F5FF] border border-[#E9E2FF] p-2 rounded-xl">
-                    <p className="text-[#6B5CA5] text-[8px] font-bold uppercase tracking-widest">Net</p>
-                    <p className={clsx('font-extrabold text-xs mt-1', netBal >= 0 ? 'text-green-600' : 'text-red-550')}>
+                  <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                    <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Net</p>
+                    <p className={clsx('font-extrabold text-xs mt-1', netBal >= 0 ? 'text-green-600' : 'text-red-600')}>
                       {netBal >= 0 ? '+' : ''}₹{formatCurrency(Math.abs(netBal))}
                     </p>
                   </div>
@@ -175,8 +175,8 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
 
                 {/* Contribution bar */}
                 {ms.stats?.totalPaid > 0 && (
-                  <div className="mt-3.5 pt-3.5 border-t border-[#E9E2FF]">
-                    <div className="flex justify-between text-[8px] font-bold text-[#6B5CA5] uppercase tracking-widest mb-1.5">
+                  <div className="mt-3.5 pt-3.5 border-t border-slate-200">
+                    <div className="flex justify-between text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
                       <span>Travel share contribution</span>
                       <span>{contributionPct.toFixed(1)}%</span>
                     </div>
