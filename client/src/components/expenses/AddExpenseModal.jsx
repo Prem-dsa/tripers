@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Camera, X, Scan, AlertCircle } from 'lucide-react';
+import { Camera, X, Scan, AlertCircle, Check, DollarSign, Calendar, Tag, FileText } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 import { expenseApi, tripApi } from '../../api';
 import { Modal } from '../ui/Modal';
@@ -26,6 +27,8 @@ const schema = z.object({
   notes: z.string().optional(),
   currency: z.string().optional(),
 });
+
+const inputClass = 'w-full bg-white/10 border border-white/20 focus:border-indigo-400 focus:bg-white/15 px-5 py-3.5 text-[14px] font-medium text-white placeholder:text-slate-400 rounded-[18px] transition-all shadow-inner outline-none backdrop-blur-md';
 
 export default function AddExpenseModal({ isOpen, onClose, tripId, expense, onSuccess }) {
   const { user } = useAuthStore();
@@ -213,14 +216,14 @@ export default function AddExpenseModal({ isOpen, onClose, tripId, expense, onSu
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title={isEdit ? 'Edit Expense' : 'Add Expense'} size="lg">
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 text-[#1E1B4B]">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         {/* Duplicate warning */}
         {duplicateWarning && (
-          <div className="flex gap-2 p-3 bg-amber-50 border border-amber-200 rounded-xl">
-            <AlertCircle size={16} className="text-[#F59E0B] flex-shrink-0 mt-0.5" />
+          <div className="flex gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-[20px]">
+            <AlertCircle size={18} className="text-amber-500 flex-shrink-0 mt-0.5" />
             <div>
-              <p className="text-amber-800 text-sm font-medium">{duplicateWarning}</p>
-              <button type="button" onClick={() => { setDuplicateWarning(null); mutation.mutate(watch()); }} className="text-[#F59E0B] text-xs underline mt-1 font-bold">Add anyway</button>
+              <p className="text-amber-800 text-sm font-semibold">{duplicateWarning}</p>
+              <button type="button" onClick={() => { setDuplicateWarning(null); mutation.mutate(watch()); }} className="text-amber-600 text-[11px] underline mt-1 font-bold">Add anyway</button>
             </div>
           </div>
         )}
@@ -228,83 +231,96 @@ export default function AddExpenseModal({ isOpen, onClose, tripId, expense, onSu
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Name */}
           <div className="sm:col-span-2">
-            <label className="label">Expense Name *</label>
-            <input {...register('name')} placeholder="Hotel booking, Dinner, Petrol..." className={clsx('input bg-white border-[#E9E2FF]', errors.name && 'input-error')} />
-            {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Expense Name *</label>
+            <input {...register('name')} placeholder="Hotel booking, Dinner, Taxi..." className={clsx(inputClass, errors.name && '!border-danger/50')} />
+            {errors.name && <p className="text-danger text-[11px] font-bold mt-1.5">{errors.name.message}</p>}
           </div>
 
           {/* Amount + Currency */}
           <div>
-            <label className="label">Amount *</label>
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Amount *</label>
             <div className="flex gap-2">
-              <select {...register('currency')} className="input w-24 flex-shrink-0 py-2.5 bg-white border-[#E9E2FF]">
+              <select {...register('currency')} className={`${inputClass} w-28 flex-shrink-0 appearance-none cursor-pointer`} style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 0.75rem center', backgroundSize: '0.85rem' }}>
                 {CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>)}
               </select>
-              <input {...register('amount', { valueAsNumber: true })} type="number" step="0.01" placeholder="0.00" className={clsx('input flex-1 bg-white border-[#E9E2FF]', errors.amount && 'input-error')} />
+              <input {...register('amount', { valueAsNumber: true })} type="number" step="0.01" placeholder="0.00" className={clsx(inputClass, 'flex-1', errors.amount && '!border-danger/50')} />
             </div>
-            {errors.amount && <p className="text-red-500 text-xs mt-1">{errors.amount.message}</p>}
+            {errors.amount && <p className="text-danger text-[11px] font-bold mt-1.5">{errors.amount.message}</p>}
           </div>
 
           {/* Category */}
           <div>
-            <label className="label">Category</label>
-            <select {...register('category')} className="input bg-white border-[#E9E2FF]">
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Category</label>
+            <select {...register('category')} className={`${inputClass} appearance-none cursor-pointer`} style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1rem' }}>
               {CATEGORIES.map(c => <option key={c} value={c}>{CAT_ICONS[c]} {c.charAt(0).toUpperCase()+c.slice(1)}</option>)}
             </select>
           </div>
 
           {/* Paid By */}
           <div>
-            <label className="label">Paid By *</label>
-            <select {...register('paidBy')} className={clsx('input bg-white border-[#E9E2FF]', errors.paidBy && 'input-error')}>
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Paid By *</label>
+            <select {...register('paidBy')} className={clsx(inputClass, 'appearance-none cursor-pointer', errors.paidBy && '!border-danger/50')} style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1rem' }}>
               <option value="">Select payer</option>
               {members.map(m => (
                 <option key={m.user?._id} value={m.user?._id}>{m.user?.fullName}</option>
               ))}
             </select>
-            {errors.paidBy && <p className="text-red-500 text-xs mt-1">{errors.paidBy.message}</p>}
+            {errors.paidBy && <p className="text-danger text-[11px] font-bold mt-1.5">{errors.paidBy.message}</p>}
           </div>
 
           {/* Date */}
           <div>
-            <label className="label">Date</label>
-            <input {...register('date')} type="date" className="input bg-white border-[#E9E2FF]" />
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Date</label>
+            <input {...register('date')} type="date" className={inputClass} />
           </div>
 
           {/* Description */}
           <div className="sm:col-span-2">
-            <label className="label">Description <span className="text-[#6B5CA5]/60">(optional)</span></label>
-            <textarea {...register('description')} rows={2} placeholder="Additional details..." className="input resize-none bg-white border-[#E9E2FF]" />
+            <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center justify-between">
+              <span>Description</span>
+              <span className="text-slate-400 font-medium tracking-normal lowercase">Optional</span>
+            </label>
+            <textarea {...register('description')} rows={2} placeholder="Additional details..." className={`${inputClass} resize-none`} />
           </div>
         </div>
 
         {/* Receipt Upload + OCR */}
         <div>
-          <label className="label">Receipt <span className="text-[#6B5CA5]/60">(optional)</span></label>
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center justify-between">
+            <span>Receipt</span>
+            <span className="text-slate-400 font-medium tracking-normal lowercase">Optional</span>
+          </label>
           <div className="flex gap-3 flex-wrap">
             <div
               onClick={() => fileRef.current?.click()}
-              className="flex-1 min-h-24 border-2 border-dashed border-[#E9E2FF] hover:border-[#6D4AFF]/50 rounded-xl flex-center flex-col gap-2 cursor-pointer transition-all bg-[#F8F5FF]"
+              className="flex-1 min-h-[90px] border-2 border-dashed border-white/80 hover:border-primary-300 rounded-[20px] flex items-center justify-center flex-col gap-1.5 cursor-pointer transition-all bg-white/40 hover:bg-white/60 shadow-sm"
             >
               {receiptPreview ? (
-                <div className="relative w-full flex-center">
-                  <img src={receiptPreview} alt="Receipt" className="max-h-32 rounded-lg object-contain" />
-                  <button type="button" onClick={e => { e.stopPropagation(); setReceipt(null); setReceiptPreview(null); }} className="absolute top-1 right-1 w-6 h-6 bg-[#EF4444] rounded-full flex-center">
-                    <X size={12} className="text-white" />
+                <div className="relative w-full flex items-center justify-center p-2">
+                  <img src={receiptPreview} alt="Receipt" className="max-h-28 rounded-lg object-contain" />
+                  <button type="button" onClick={e => { e.stopPropagation(); setReceipt(null); setReceiptPreview(null); }} className="absolute top-1 right-1 w-7 h-7 bg-danger rounded-full flex items-center justify-center shadow-sm">
+                    <X size={13} className="text-white" />
                   </button>
                 </div>
               ) : (
                 <>
-                  <Camera size={20} className="text-[#6B5CA5]" />
-                  <p className="text-[#6B5CA5] text-xs">Upload receipt</p>
+                  <Camera size={20} className="text-slate-400" />
+                  <p className="text-slate-500 text-[11px] font-bold">Upload receipt image</p>
                 </>
               )}
             </div>
             {receiptPreview && (
-              <button type="button" onClick={handleOCR} disabled={isScanning} className="btn-outline btn gap-2 text-sm self-start">
+              <motion.button
+                type="button"
+                onClick={handleOCR}
+                disabled={isScanning}
+                className="flex items-center gap-2 text-[11px] font-bold px-5 py-3 rounded-full bg-white border border-slate-200 text-slate-600 hover:bg-primary-50 hover:text-primary-600 hover:border-primary-200 shadow-sm uppercase tracking-wider self-center transition-all"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
+              >
                 {isScanning ? <Spinner size="sm" /> : <Scan size={15} />}
                 {isScanning ? 'Scanning...' : 'Scan OCR'}
-              </button>
+              </motion.button>
             )}
           </div>
           <input ref={fileRef} type="file" accept="image/*,application/pdf" className="hidden" onChange={handleFileChange} />
@@ -312,14 +328,19 @@ export default function AddExpenseModal({ isOpen, onClose, tripId, expense, onSu
 
         {/* Split Type */}
         <div>
-          <label className="label">Split Method</label>
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Split Method</label>
           <div className="flex gap-2">
             {['equal', 'percentage', 'custom'].map(type => (
               <button
                 key={type}
                 type="button"
                 onClick={() => { setSplitType(type); setValue('splitType', type); }}
-                className={clsx('btn flex-1 text-sm capitalize', splitType === type ? 'btn-primary' : 'btn-secondary')}
+                className={clsx(
+                  'flex-1 py-3 text-[12px] font-bold uppercase tracking-wider rounded-full transition-all duration-300',
+                  splitType === type
+                    ? 'bg-primary-500 text-white shadow-glow'
+                    : 'bg-white/60 border border-white/80 text-slate-600 hover:bg-white'
+                )}
               >
                 {type === 'equal' ? 'Equal' : type === 'percentage' ? '%' : 'Custom'}
               </button>
@@ -329,47 +350,64 @@ export default function AddExpenseModal({ isOpen, onClose, tripId, expense, onSu
 
         {/* Member Selection */}
         <div>
-          <label className="label">Split Between ({selectedMembers.length} selected)</label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2">
+            Split Between ({selectedMembers.length} selected)
+          </label>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-56 overflow-y-auto pr-1 no-scrollbar">
             {members.map(m => {
               const userId = m.user?._id;
               const selected = selectedMembers.includes(userId);
               const splitData = customSplits.find(s => s.user === userId);
               return (
-                <div key={userId} className={clsx('p-3 rounded-xl border transition-all', selected ? 'border-[#6D4AFF]/40 bg-[#F3F0FF]' : 'border-[#E9E2FF] bg-white hover:border-[#D0C6FF]')}>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => toggleMember(userId)} className={clsx('w-5 h-5 rounded border-2 flex-center flex-shrink-0 transition-all', selected ? 'bg-[#6D4AFF] border-[#6D4AFF]' : 'border-[#E9E2FF]')}>
-                      {selected && <span className="text-white text-[10px]">✓</span>}
+                <div
+                  key={userId}
+                  className={clsx(
+                    'p-3.5 rounded-[18px] border transition-all duration-300 shadow-sm',
+                    selected
+                      ? 'bg-primary-50/50 border-primary-200'
+                      : 'bg-white/40 border-white/60 hover:bg-white/70'
+                  )}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      onClick={() => toggleMember(userId)}
+                      className={clsx(
+                        'w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-all',
+                        selected ? 'bg-primary-500 border-primary-500 text-white' : 'border-slate-300 bg-white'
+                      )}
+                    >
+                      {selected && <Check size={12} className="stroke-[3]" />}
                     </button>
-                    <Avatar src={m.user?.photo} name={m.user?.fullName} size="xs" className="ring-1 ring-black/5" />
-                    <p className="text-[#1E1B4B] text-sm font-semibold flex-1 truncate">{m.user?.fullName}</p>
+                    <Avatar src={m.user?.photo} name={m.user?.fullName} size="xs" />
+                    <p className="text-slate-800 text-[12px] font-bold flex-1 truncate">{m.user?.fullName}</p>
                     {splitType === 'equal' && selected && (
-                      <span className="text-[#6D4AFF] text-xs font-extrabold">₹{equalShare}</span>
+                      <span className="text-primary-500 text-[11px] font-extrabold">₹{equalShare}</span>
                     )}
                   </div>
                   {selected && splitType === 'percentage' && (
-                    <div className="mt-2 flex items-center gap-2">
+                    <div className="mt-2.5 flex items-center gap-2">
                       <input
                         type="number" step="0.01" min="0" max="100"
                         value={splitData?.percentage || ''}
                         onChange={e => updateCustomSplit(userId, 'percentage', parseFloat(e.target.value))}
                         placeholder="0"
-                        className="input py-1 text-sm w-20 bg-white border-[#E9E2FF]"
+                        className={`${inputClass} !py-1.5 !px-3 text-xs w-20`}
                       />
-                      <span className="text-[#6B5CA5] text-sm">%</span>
+                      <span className="text-slate-400 text-xs font-bold">%</span>
                       {watchedAmount && splitData?.percentage > 0 && (
-                        <span className="text-[#6D4AFF] text-xs font-semibold">≈ ₹{((parseFloat(watchedAmount) * splitData.percentage) / 100).toFixed(2)}</span>
+                        <span className="text-primary-500 text-[11px] font-bold">≈ ₹{((parseFloat(watchedAmount) * splitData.percentage) / 100).toFixed(2)}</span>
                       )}
                     </div>
                   )}
                   {selected && splitType === 'custom' && (
-                    <div className="mt-2">
+                    <div className="mt-2.5">
                       <input
                         type="number" step="0.01" min="0"
                         value={splitData?.amount || ''}
                         onChange={e => updateCustomSplit(userId, 'amount', parseFloat(e.target.value))}
                         placeholder="0.00"
-                        className="input py-1 text-sm bg-white border-[#E9E2FF]"
+                        className={`${inputClass} !py-1.5 !px-3 text-xs`}
                       />
                     </div>
                   )}
@@ -380,12 +418,12 @@ export default function AddExpenseModal({ isOpen, onClose, tripId, expense, onSu
 
           {/* Validation hints */}
           {splitType === 'percentage' && (
-            <p className={clsx('text-xs mt-2 font-semibold', Math.abs(totalPct - 100) < 0.01 ? 'text-green-600' : 'text-[#F59E0B]')}>
+            <p className={clsx('text-[11px] mt-2 font-bold', Math.abs(totalPct - 100) < 0.01 ? 'text-success' : 'text-amber-500')}>
               Total: {totalPct.toFixed(1)}% {Math.abs(totalPct - 100) < 0.01 ? '✓' : '(must equal 100%)'}
             </p>
           )}
           {splitType === 'custom' && watchedAmount > 0 && (
-            <p className={clsx('text-xs mt-2 font-semibold', Math.abs(totalCustom - parseFloat(watchedAmount)) < 0.01 ? 'text-green-600' : 'text-[#F59E0B]')}>
+            <p className={clsx('text-[11px] mt-2 font-bold', Math.abs(totalCustom - parseFloat(watchedAmount)) < 0.01 ? 'text-success' : 'text-amber-500')}>
               Total: ₹{totalCustom.toFixed(2)} / ₹{parseFloat(watchedAmount).toFixed(2)} {Math.abs(totalCustom - parseFloat(watchedAmount)) < 0.01 ? '✓' : ''}
             </p>
           )}
@@ -393,15 +431,26 @@ export default function AddExpenseModal({ isOpen, onClose, tripId, expense, onSu
 
         {/* Notes */}
         <div>
-          <label className="label">Notes <span className="text-[#6B5CA5]/60">(optional)</span></label>
-          <textarea {...register('notes')} rows={2} placeholder="Any additional notes..." className="input resize-none bg-white border-[#E9E2FF]" />
+          <label className="text-[11px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center justify-between">
+            <span>Notes</span>
+            <span className="text-slate-400 font-medium tracking-normal lowercase">Optional</span>
+          </label>
+          <textarea {...register('notes')} rows={2} placeholder="Any additional notes..." className={`${inputClass} resize-none`} />
         </div>
 
-        <div className="flex gap-3 pt-2">
-          <button type="button" onClick={onClose} className="btn-outline btn flex-1">Cancel</button>
-          <button type="submit" disabled={mutation.isPending} className="btn-primary btn flex-1 gap-2 shadow-glow-sm">
-            {mutation.isPending ? <Spinner size="sm" /> : isEdit ? '✓ Update' : '+ Add Expense'}
+        <div className="flex gap-4 pt-4 border-t border-slate-200/60">
+          <button type="button" onClick={onClose} className="btn-secondary rounded-full py-3.5 px-8 font-bold tracking-wide shadow-sm flex-1">
+            Cancel
           </button>
+          <motion.button
+            type="submit"
+            disabled={mutation.isPending}
+            className="btn-primary rounded-full py-3.5 px-8 font-bold tracking-wide shadow-glow flex-[2] flex items-center justify-center gap-2 text-[13px] uppercase tracking-widest"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {mutation.isPending ? <Spinner size="sm" className="border-white" /> : isEdit ? '✓ Update Expense' : '+ Add Expense'}
+          </motion.button>
         </div>
       </form>
     </Modal>
