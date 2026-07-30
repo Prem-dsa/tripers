@@ -1,6 +1,25 @@
 import { Canvas, useFrame } from '@react-three/fiber';
-import { Suspense, useRef, useMemo, useEffect } from 'react';
+import { Suspense, useRef, useMemo, useEffect, Component } from 'react';
 import * as THREE from 'three';
+
+class ThreeErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error) {
+    console.warn('[ThreeJS Error Suppressed]:', error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
 
 function ParticleField({ count = 80 }) {
   const pointsRef = useRef();
@@ -9,11 +28,9 @@ function ParticleField({ count = 80 }) {
     const pos = new Float32Array(count * 3);
     const speeds = new Float32Array(count);
     for (let i = 0; i < count; i++) {
-      // Spread particles across a box
       pos[i * 3] = (Math.random() - 0.5) * 12;
       pos[i * 3 + 1] = (Math.random() - 0.5) * 12;
       pos[i * 3 + 2] = (Math.random() - 0.5) * 10 - 2;
-
       speeds[i] = 0.05 + Math.random() * 0.15;
     }
     return [pos, speeds];
@@ -21,18 +38,14 @@ function ParticleField({ count = 80 }) {
 
   useFrame((state, delta) => {
     if (!pointsRef.current) return;
-    
-    // Slow rotation
     pointsRef.current.rotation.y += delta * 0.03;
     pointsRef.current.rotation.x += delta * 0.01;
 
-    // Custom drifting on particles (upward motion)
     const geo = pointsRef.current.geometry;
     const posAttr = geo.attributes.position;
     for (let i = 0; i < count; i++) {
       let y = posAttr.getY(i);
       y += delta * driftSpeeds[i] * 0.8;
-      // Reset if it goes too high
       if (y > 6) y = -6;
       posAttr.setY(i, y);
     }
@@ -75,7 +88,6 @@ function WireframeGeometries() {
 
   return (
     <group>
-      {/* Slow floating main wireframe */}
       <mesh ref={mesh1} position={[-3, 2, -4]}>
         <dodecahedronGeometry args={[1.5, 1]} />
         <meshBasicMaterial
@@ -86,7 +98,6 @@ function WireframeGeometries() {
         />
       </mesh>
 
-      {/* Floating secondary wireframe */}
       <mesh ref={mesh2} position={[4, -2, -3]}>
         <icosahedronGeometry args={[1.2, 0]} />
         <meshBasicMaterial
@@ -105,7 +116,6 @@ function InteractiveScene() {
 
   useFrame((state) => {
     if (!rootGroup.current) return;
-    // Parallax effect: ease rotation and position based on mouse coordinate
     const targetX = state.pointer.x * 0.4;
     const targetY = state.pointer.y * 0.4;
 
@@ -127,29 +137,34 @@ export function AmbientBackground() {
 
   useEffect(() => {
     return () => {
-      if (glRef.current) {
-        const extension = glRef.current.getExtension('WEBGL_lose_context');
-        if (extension) {
-          extension.loseContext();
-        }
+      if (glRef.current && typeof glRef.current.getContext === 'function') {
+        try {
+          const webglCtx = glRef.current.getContext();
+          if (webglCtx && typeof webglCtx.getExtension === 'function') {
+            const extension = webglCtx.getExtension('WEBGL_lose_context');
+            if (extension) extension.loseContext();
+          }
+        } catch {}
       }
     };
   }, []);
 
   return (
     <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden opacity-35">
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 60 }}
-        gl={{ alpha: true, antialias: true }}
-        dpr={[1, 1.5]}
-        onCreated={({ gl }) => {
-          glRef.current = gl;
-        }}
-      >
-        <Suspense fallback={null}>
-          <InteractiveScene />
-        </Suspense>
-      </Canvas>
+      <ThreeErrorBoundary>
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 60 }}
+          gl={{ alpha: true, antialias: true }}
+          dpr={[1, 1.5]}
+          onCreated={({ gl }) => {
+            glRef.current = gl;
+          }}
+        >
+          <Suspense fallback={null}>
+            <InteractiveScene />
+          </Suspense>
+        </Canvas>
+      </ThreeErrorBoundary>
     </div>
   );
 }
