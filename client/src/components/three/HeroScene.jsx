@@ -1,7 +1,26 @@
-import { Suspense, useRef, useEffect } from 'react';
+import { Suspense, useRef, useEffect, Component } from 'react';
 import { Canvas, useFrame } from '@react-three/fiber';
 import { Float, MeshDistortMaterial } from '@react-three/drei';
 import * as THREE from 'three';
+
+class ThreeErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error) {
+    console.warn('[HeroScene Error Suppressed]:', error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return null;
+    }
+    return this.props.children;
+  }
+}
 
 /**
  * Holographic concentric Globe representing destinations
@@ -73,12 +92,9 @@ function OrbitCard({ radius, speed, offset, tilt, color, scale = [1, 1, 1] }) {
   useFrame(({ clock }) => {
     const t = clock.getElapsedTime() * speed + offset;
     if (groupRef.current) {
-      // Orbit coordinates
       groupRef.current.position.x = Math.cos(t) * radius;
       groupRef.current.position.z = Math.sin(t) * radius;
       groupRef.current.position.y = Math.sin(t * 1.2) * 0.5;
-      
-      // Face towards target/center
       groupRef.current.rotation.y = -t + Math.PI / 2;
     }
     if (cardMeshRef.current) {
@@ -89,7 +105,6 @@ function OrbitCard({ radius, speed, offset, tilt, color, scale = [1, 1, 1] }) {
   return (
     <group ref={groupRef} rotation={[tilt, 0, 0]}>
       <Float speed={2.5} rotationIntensity={0.4} floatIntensity={0.6}>
-        {/* Glowing glass card body */}
         <mesh ref={cardMeshRef} scale={scale}>
           <boxGeometry args={[0.55, 0.36, 0.02]} />
           <meshStandardMaterial
@@ -113,14 +128,12 @@ function Scene() {
 
   useFrame((state) => {
     if (sceneRef.current) {
-      // Smooth camera parallax following mouse coordinate
       const targetX = state.pointer.x * 0.3;
       const targetY = state.pointer.y * 0.3;
       sceneRef.current.rotation.y = THREE.MathUtils.lerp(sceneRef.current.rotation.y, targetX, 0.05);
       sceneRef.current.rotation.x = THREE.MathUtils.lerp(sceneRef.current.rotation.x, -targetY, 0.05);
     }
     if (lightRef.current) {
-      // Specular highlight shift with pointer
       lightRef.current.position.x = THREE.MathUtils.lerp(lightRef.current.position.x, state.pointer.x * 6 + 3, 0.08);
       lightRef.current.position.y = THREE.MathUtils.lerp(lightRef.current.position.y, state.pointer.y * 6 + 4, 0.08);
     }
@@ -128,18 +141,15 @@ function Scene() {
 
   return (
     <group ref={sceneRef}>
-      {/* Lights */}
       <ambientLight intensity={0.65} />
       <directionalLight ref={lightRef} position={[3, 4, 2]} intensity={1.5} color="#ffffff" />
       <directionalLight position={[-3, -4, 3]} intensity={0.6} color="#8B5CF6" />
       <pointLight position={[0, 0, 2]} intensity={0.5} color="#A855F7" />
 
-      {/* Central Globe */}
       <Float speed={1.2} rotationIntensity={0.25} floatIntensity={0.4}>
         <Globe />
       </Float>
 
-      {/* Elegant glass travel cards */}
       <OrbitCard radius={2.0} speed={0.25} offset={0} tilt={0.2} color="#FFFFFF" scale={[1.1, 1.1, 1]} />
       <OrbitCard radius={2.4} speed={-0.2} offset={2.1} tilt={-0.3} color="#E9D5FF" />
       <OrbitCard radius={1.8} speed={0.3} offset={4.2} tilt={0.45} color="#8B5CF6" scale={[0.9, 0.9, 1]} />
@@ -152,29 +162,34 @@ export default function HeroScene({ className = '' }) {
 
   useEffect(() => {
     return () => {
-      if (glRef.current) {
-        const extension = glRef.current.getExtension('WEBGL_lose_context');
-        if (extension) {
-          extension.loseContext();
-        }
+      if (glRef.current && typeof glRef.current.getContext === 'function') {
+        try {
+          const webglCtx = glRef.current.getContext();
+          if (webglCtx && typeof webglCtx.getExtension === 'function') {
+            const extension = webglCtx.getExtension('WEBGL_lose_context');
+            if (extension) extension.loseContext();
+          }
+        } catch {}
       }
     };
   }, []);
 
   return (
     <div className={className} style={{ pointerEvents: 'none' }}>
-      <Canvas
-        camera={{ position: [0, 0, 5], fov: 45 }}
-        gl={{ alpha: true, antialias: true }}
-        dpr={[1, 2]}
-        onCreated={({ gl }) => {
-          glRef.current = gl;
-        }}
-      >
-        <Suspense fallback={null}>
-          <Scene />
-        </Suspense>
-      </Canvas>
+      <ThreeErrorBoundary>
+        <Canvas
+          camera={{ position: [0, 0, 5], fov: 45 }}
+          gl={{ alpha: true, antialias: true }}
+          dpr={[1, 2]}
+          onCreated={({ gl }) => {
+            glRef.current = gl;
+          }}
+        >
+          <Suspense fallback={null}>
+            <Scene />
+          </Suspense>
+        </Canvas>
+      </ThreeErrorBoundary>
     </div>
   );
 }
