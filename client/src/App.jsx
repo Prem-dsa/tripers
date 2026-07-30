@@ -1,9 +1,10 @@
 import { lazy, Suspense } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './store/authStore';
 import { AppLayout } from './components/AppLayout';
-import { MapPin } from 'lucide-react';
+import { MapPin, Compass } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 // Auth Pages
 const LoginPage = lazy(() => import('./pages/auth/LoginPage'));
@@ -38,10 +39,12 @@ const queryClient = new QueryClient({
 
 function PageLoader() {
   return (
-    <div className="flex items-center justify-center min-h-[400px] w-full">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
-        <p className="text-xs font-bold text-slate-500 uppercase tracking-widest animate-pulse">Loading Content...</p>
+    <div className="flex items-center justify-center min-h-[450px] w-full">
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-12 h-12 rounded-[18px] bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-glow animate-pulse">
+          <Compass size={24} className="text-white" />
+        </div>
+        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em]">Loading...</p>
       </div>
     </div>
   );
@@ -93,13 +96,24 @@ export default function App() {
 
             {/* 404 */}
             <Route path="*" element={
-              <div className="min-h-screen bg-slate-900 flex items-center justify-center flex-col gap-4 px-4">
-                <div className="w-24 h-24 bg-gradient-to-br from-indigo-500/20 to-cyan-500/10 rounded-3xl flex items-center justify-center border border-white/5">
-                  <MapPin size={40} className="text-indigo-400" />
-                </div>
-                <h1 className="text-2xl font-bold text-white">Page Not Found</h1>
-                <p className="text-slate-400 text-sm text-center max-w-xs">The page you're looking for doesn't exist or has been moved.</p>
-                <a href="/dashboard" className="btn-primary btn mt-2 px-6 py-3 rounded-xl">Go to Dashboard</a>
+              <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6 relative overflow-hidden">
+                <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-indigo-500/15 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[100px] pointer-events-none" />
+                
+                <motion.div
+                  className="w-full max-w-md glass p-10 text-center relative z-10"
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                >
+                  <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-[20px] flex items-center justify-center mx-auto mb-6 shadow-glow">
+                    <MapPin size={28} className="text-white stroke-[2.5]" />
+                  </div>
+                  <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">Page Not Found</h1>
+                  <p className="text-slate-400 text-sm font-medium mb-8 leading-relaxed">The page you're looking for doesn't exist.</p>
+                  <Link to="/dashboard" className="btn-primary inline-flex items-center justify-center py-3.5 px-8 rounded-full shadow-glow text-[12px] font-bold uppercase tracking-widest">
+                    Return to Dashboard
+                  </Link>
+                </motion.div>
               </div>
             } />
           </Routes>
