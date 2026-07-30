@@ -114,7 +114,8 @@ exports.login = async (req, res, next) => {
       return res.status(400).json({ success: false, message: 'Email and password are required' });
     }
 
-    const user = await User.findOne({ email }).select('+password +refreshToken');
+    const cleanEmail = email.trim().toLowerCase();
+    const user = await User.findOne({ email: cleanEmail }).select('+password +refreshToken');
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
@@ -131,6 +132,7 @@ exports.login = async (req, res, next) => {
       user: user.toPublicJSON(),
     });
   } catch (error) {
+    console.error('[Login Error]:', error);
     next(error);
   }
 };
