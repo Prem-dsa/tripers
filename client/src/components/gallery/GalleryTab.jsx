@@ -57,27 +57,29 @@ export default function GalleryTab({ tripId }) {
   const lightboxItems = gallery.filter(g => g.fileType === 'photo');
 
   return (
-    <div className="space-y-5 text-[#1E1B4B]">
-      {/* Upload */}
+    <div className="space-y-6">
+      {/* Upload Zone */}
       <div
         {...getRootProps()}
         className={clsx(
-          'border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-all bg-[#F8F5FF]',
-          isDragActive ? 'border-[#6D4AFF] bg-[#F3F0FF]' : 'border-[#E9E2FF] hover:border-[#6D4AFF]/50'
+          'border-2 border-dashed rounded-[24px] p-8 text-center cursor-pointer transition-all duration-300 backdrop-blur-[20px] bg-white/40 shadow-sm',
+          isDragActive ? 'border-primary-500 bg-primary-50/40' : 'border-white/80 hover:border-primary-300 hover:bg-white/60'
         )}
       >
         <input {...getInputProps()} />
         {uploading ? (
-          <div className="flex-center flex-col gap-2">
-            <Spinner />
-            <p className="text-[#6B5CA5] text-sm font-semibold">Uploading...</p>
+          <div className="flex flex-col items-center gap-2">
+            <Spinner size="md" />
+            <p className="text-slate-500 text-xs font-bold uppercase tracking-wider">Uploading files...</p>
           </div>
         ) : (
-          <>
-            <Upload size={28} className="text-[#6D4AFF] mx-auto mb-2" />
-            <p className="text-[#1E1B4B] font-bold text-sm">{isDragActive ? 'Drop files here' : 'Drag & drop or click to upload'}</p>
-            <p className="text-[#6B5CA5] text-xs mt-1 font-semibold">Photos, videos, receipts, documents (max 20MB each)</p>
-          </>
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-12 h-12 rounded-[16px] bg-primary-50 flex items-center justify-center border border-primary-100 shadow-sm">
+              <Upload size={20} className="text-primary-500" />
+            </div>
+            <p className="text-slate-800 font-extrabold text-sm tracking-tight">{isDragActive ? 'Drop files here' : 'Drag & drop or click to upload'}</p>
+            <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest">Photos, videos, receipts, documents (max 20MB)</p>
+          </div>
         )}
       </div>
 
@@ -87,7 +89,12 @@ export default function GalleryTab({ tripId }) {
           <button
             key={type}
             onClick={() => setFilter(type)}
-            className={clsx('btn text-xs px-3 py-1.5 rounded-lg capitalize whitespace-nowrap flex-shrink-0', filter === type ? 'btn-primary' : 'btn-secondary')}
+            className={clsx(
+              'px-4 py-2 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-300 whitespace-nowrap flex-shrink-0',
+              filter === type
+                ? 'bg-primary-500 text-white shadow-glow'
+                : 'bg-white/60 border border-white/80 text-slate-500 hover:bg-white hover:text-slate-700 shadow-sm'
+            )}
           >
             {type}
           </button>
@@ -96,13 +103,13 @@ export default function GalleryTab({ tripId }) {
 
       {/* Gallery Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {[...Array(8)].map((_, i) => <div key={i} className="skeleton aspect-square rounded-xl" />)}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, i) => <div key={i} className="skeleton aspect-square rounded-[20px]" />)}
         </div>
       ) : !gallery.length ? (
-        <EmptyState icon={<Image size={32} className="text-[#6D4AFF]" />} title="No media yet" description="Upload photos, videos, and documents" />
+        <EmptyState icon={<Image size={32} className="text-primary-500" />} title="No media yet" description="Upload photos, videos, and documents" />
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           <AnimatePresence>
             {gallery.map((item, i) => (
               <motion.div
@@ -112,7 +119,7 @@ export default function GalleryTab({ tripId }) {
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
                 transition={{ delay: i * 0.03 }}
-                className="group relative aspect-square rounded-xl overflow-hidden bg-[#F8F5FF] border border-[#E9E2FF] cursor-pointer"
+                className="group relative aspect-square rounded-[20px] overflow-hidden bg-white/60 border border-white/80 cursor-pointer shadow-sm hover:shadow-float transition-all duration-300"
                 onClick={() => { if (item.fileType === 'photo') setLightbox(lightboxItems.findIndex(g => g._id === item._id)); }}
               >
                 {item.fileType === 'photo' && (
@@ -122,27 +129,27 @@ export default function GalleryTab({ tripId }) {
                   <video src={item.fileUrl} className="w-full h-full object-cover" />
                 )}
                 {(item.fileType === 'document' || item.fileType === 'receipt') && (
-                  <div className="w-full h-full flex-center flex-col gap-2 bg-[#F8F5FF]">
-                    <FileText size={32} className="text-[#6D4AFF]" />
-                    <p className="text-[#6B5CA5] text-xs px-2 text-center truncate font-bold">{item.caption || item.fileType}</p>
+                  <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-slate-50 p-4">
+                    <FileText size={32} className="text-primary-500" />
+                    <p className="text-slate-600 text-xs px-2 text-center truncate font-bold">{item.caption || item.fileType}</p>
                   </div>
                 )}
 
                 {/* Hover overlay */}
-                <div className="absolute inset-0 bg-[#1E1B4B]/70 opacity-0 group-hover:opacity-100 transition-all flex flex-col justify-between p-3">
-                  <div className="flex justify-between">
-                    <Badge variant={item.fileType === 'photo' ? 'primary' : 'gray'} className="text-xs">{item.fileType}</Badge>
+                <div className="absolute inset-0 bg-slate-900/70 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col justify-between p-3.5">
+                  <div className="flex justify-between items-center">
+                    <Badge variant={item.fileType === 'photo' ? 'primary' : 'gray'} className="text-[9px] uppercase">{item.fileType}</Badge>
                     {item.uploadedBy?._id === user?._id && (
-                      <button onClick={e => { e.stopPropagation(); deleteMutation.mutate(item._id); }} className="w-6 h-6 bg-[#EF4444] rounded-full flex-center">
+                      <button onClick={e => { e.stopPropagation(); deleteMutation.mutate(item._id); }} className="w-6 h-6 bg-danger rounded-full flex items-center justify-center shadow-sm">
                         <X size={11} className="text-white" />
                       </button>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Avatar src={item.uploadedBy?.photo} name={item.uploadedBy?.fullName} size="xs" className="ring-1 ring-white/10" />
+                  <div className="flex items-center gap-2">
+                    <Avatar src={item.uploadedBy?.photo} name={item.uploadedBy?.fullName} size="xs" />
                     <div className="min-w-0">
-                      <p className="text-white text-xs font-bold truncate">{item.uploadedBy?.fullName.split(' ')[0]}</p>
-                      <p className="text-white/60 text-[10px] font-semibold">{format(new Date(item.createdAt), 'MMM d')}</p>
+                      <p className="text-white text-[11px] font-bold truncate">{item.uploadedBy?.fullName.split(' ')[0]}</p>
+                      <p className="text-white/60 text-[9px] font-medium">{format(new Date(item.createdAt), 'MMM d')}</p>
                     </div>
                   </div>
                 </div>
@@ -156,22 +163,22 @@ export default function GalleryTab({ tripId }) {
       <AnimatePresence>
         {lightbox !== null && (
           <motion.div
-            className="fixed inset-0 z-50 bg-[#1E1B4B]/95 backdrop-blur-md flex items-center justify-center"
+            className="fixed inset-0 z-50 bg-slate-950/90 backdrop-blur-xl flex items-center justify-center p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setLightbox(null)}
           >
-            <button className="absolute top-4 right-4 btn-icon bg-white/10 text-white hover:bg-white/20" onClick={() => setLightbox(null)}>
+            <button className="absolute top-6 right-6 w-10 h-10 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors" onClick={() => setLightbox(null)}>
               <X size={20} />
             </button>
             {lightbox > 0 && (
-              <button className="absolute left-4 top-1/2 -translate-y-1/2 btn-icon bg-white/10 text-white hover:bg-white/20" onClick={e => { e.stopPropagation(); setLightbox(lightbox - 1); }}>
+              <button className="absolute left-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors" onClick={e => { e.stopPropagation(); setLightbox(lightbox - 1); }}>
                 <ChevronLeft size={24} />
               </button>
             )}
             {lightbox < lightboxItems.length - 1 && (
-              <button className="absolute right-4 top-1/2 -translate-y-1/2 btn-icon bg-white/10 text-white hover:bg-white/20" onClick={e => { e.stopPropagation(); setLightbox(lightbox + 1); }}>
+              <button className="absolute right-6 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/10 text-white hover:bg-white/20 flex items-center justify-center transition-colors" onClick={e => { e.stopPropagation(); setLightbox(lightbox + 1); }}>
                 <ChevronRight size={24} />
               </button>
             )}
@@ -179,12 +186,12 @@ export default function GalleryTab({ tripId }) {
               key={lightbox}
               src={lightboxItems[lightbox]?.fileUrl}
               alt="Gallery"
-              className="max-w-full max-h-full object-contain rounded-xl px-16"
+              className="max-w-full max-h-[85vh] object-contain rounded-[24px] shadow-2xl"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               onClick={e => e.stopPropagation()}
             />
-            <div className="absolute bottom-4 text-white/70 text-sm font-semibold">{lightbox + 1} / {lightboxItems.length}</div>
+            <div className="absolute bottom-6 text-white/70 text-xs font-bold uppercase tracking-widest bg-white/10 px-4 py-2 rounded-full backdrop-blur-md">{lightbox + 1} / {lightboxItems.length}</div>
           </motion.div>
         )}
       </AnimatePresence>
