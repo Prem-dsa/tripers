@@ -24,11 +24,10 @@ const statusConfig = {
 export default function SettlementsTab({ tripId }) {
   const { user } = useAuthStore();
   const queryClient = useQueryClient();
-  const [payModal, setPayModal] = useState(null); // stores active settlement to pay
-  const [screenshotPreview, setScreenshotPreview] = useState(null); // for viewing uploaded screens
+  const [payModal, setPayModal] = useState(null);
+  const [screenshotPreview, setScreenshotPreview] = useState(null);
   const [copiedId, setCopiedId] = useState(false);
   
-  // Form fields for marking paid
   const [screenshotFile, setScreenshotFile] = useState(null);
   const [upiRef, setUpiRef] = useState('');
   const [uploading, setUploading] = useState(false);
@@ -107,53 +106,26 @@ export default function SettlementsTab({ tripId }) {
         qrCode: res.data.qrCode,
       });
     } catch {
-      toast.error('Receiver has not configured a UPI ID.');
+      setPayModal({
+        _id: settlement._id,
+        amount: settlement.amount,
+        to: settlement.to,
+      });
     }
   };
 
-  const copyUPI = (upiId) => {
-    if (!upiId) return;
-    navigator.clipboard.writeText(upiId);
-    setCopiedId(true);
-    toast.success('UPI ID copied to clipboard!');
-    setTimeout(() => setCopiedId(false), 2000);
-  };
-
-  const isMobileDevice = () => /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-  const launchUPIApp = (app) => {
+  const handleDeepLink = (app) => {
     if (!payModal?.upiLink) return;
     let scheme = payModal.upiLink;
-    switch(app) {
-      case 'phonepe':
-        scheme = payModal.upiLink.replace('upi://', 'phonepe://');
-        break;
-      case 'gpay':
-        scheme = payModal.upiLink.replace('upi://', 'gpay://');
-        break;
-      case 'paytm':
-        scheme = payModal.upiLink.replace('upi://', 'paytmmp://');
-        break;
-      case 'bhim':
-        scheme = payModal.upiLink.replace('upi://', 'bhim://');
-        break;
-      case 'amazon':
-        scheme = payModal.upiLink.replace('upi://', 'amazonpay://');
-        break;
-      case 'cred':
-        scheme = payModal.upiLink.replace('upi://', 'credpay://');
-        break;
-      default:
-        break;
-    }
+    if (app === 'gpay') scheme = payModal.upiLink.replace('upi://pay', 'gpay://upi/pay');
+    if (app === 'phonepe') scheme = payModal.upiLink.replace('upi://pay', 'phonepe://pay');
+    if (app === 'paytm') scheme = payModal.upiLink.replace('upi://pay', 'paytmmp://pay');
     window.location.href = scheme;
   };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
-    if (file) {
-      setScreenshotFile(file);
-    }
+    if (file) setScreenshotFile(file);
   };
 
   const handleFormSubmit = async (e) => {
@@ -162,12 +134,8 @@ export default function SettlementsTab({ tripId }) {
     
     setUploading(true);
     const fd = new FormData();
-    if (screenshotFile) {
-      fd.append('screenshot', screenshotFile);
-    }
-    if (upiRef) {
-      fd.append('upiRef', upiRef);
-    }
+    if (screenshotFile) fd.append('screenshot', screenshotFile);
+    if (upiRef) fd.append('upiRef', upiRef);
 
     markPaidMutation.mutate({ id: payModal._id, data: fd }, {
       onSettled: () => setUploading(false)
@@ -179,69 +147,73 @@ export default function SettlementsTab({ tripId }) {
     window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, '_blank');
   };
 
-  if (isLoading) return <div className="flex-center py-12"><Spinner /></div>;
+  if (isLoading) return <div className="flex items-center justify-center py-12"><Spinner /></div>;
 
   const { transactions = [], memberBalances = [], existingSettlements = [] } = data || {};
   const userId = user?._id;
 
   return (
-    <div className="space-y-8 text-[#0F172A]">
+    <div className="space-y-6 text-white">
       {/* Recommended Settlements */}
       <div>
-        <div className="border-b border-slate-200 pb-3 mb-5">
-          <h3 className="text-sm font-bold text-[#0F172A]">Recommended Settlements</h3>
-          <p className="text-slate-500 text-xs mt-1">Optimal transaction pathways to settle all balances</p>
+        <div className="border-b border-white/10 pb-2.5 mb-4">
+          <h3 className="text-[11px] font-bold text-indigo-300 uppercase tracking-[0.2em]">Recommended Settlements</h3>
+          <p className="text-slate-400 text-xs font-medium mt-0.5">Optimal transaction pathways to settle all balances</p>
         </div>
 
         {!transactions.length ? (
-          <GlassCard className="py-16 border-slate-200 text-center bg-slate-50/40">
-            <div className="text-4xl mb-3 select-none">🎉</div>
-            <p className="text-green-650 font-extrabold text-sm uppercase tracking-wider">All Settle Up Completed!</p>
-            <p className="text-slate-500 text-xs mt-1.5 font-semibold">No outstanding balances detected in trip metrics.</p>
+          <GlassCard className="!py-10 text-center" animate={false}>
+            <div className="text-3xl mb-2 select-none">🎉</div>
+            <p className="text-emerald-400 font-extrabold text-sm uppercase tracking-wider">All Settle Up Completed!</p>
+            <p className="text-slate-400 text-xs mt-1 font-medium">No outstanding balances detected in trip metrics.</p>
           </GlassCard>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             {transactions.map((t, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white border border-slate-200 p-5 rounded-[22px] flex flex-col justify-between hover:border-slate-350 hover:shadow-card transition-all duration-350 shadow-sm"
+                className="glass p-4 sm:p-5 flex flex-col justify-between hover:border-white/35 transition-all duration-300 shadow-sm"
               >
-                <div className="flex items-center gap-3.5">
+                <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <Avatar src={t.from?.photo} name={t.from?.fullName} size="sm" className="ring-2 ring-slate-100" />
+                    <Avatar src={t.from?.photo} name={t.from?.fullName} size="sm" className="ring-2 ring-white/30 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[#0F172A] text-xs font-bold truncate leading-none">{t.from?.fullName.split(' ')[0]}</p>
-                      <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest mt-1.5 truncate">Owes</p>
+                      <p className="text-white text-[12px] font-bold truncate leading-tight">{t.from?.fullName?.split(' ')[0]}</p>
+                      <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest mt-0.5 truncate">Owes</p>
                     </div>
-                    <ArrowRight size={14} className="text-[#4F46E5] mx-1 flex-shrink-0 stroke-[2.5]" />
-                    <Avatar src={t.to?.photo} name={t.to?.fullName} size="sm" className="ring-2 ring-slate-100" />
+                    <div className="w-7 h-7 rounded-full bg-indigo-500/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0">
+                      <ArrowRight size={13} className="text-indigo-400 stroke-[2.5]" />
+                    </div>
+                    <Avatar src={t.to?.photo} name={t.to?.fullName} size="sm" className="ring-2 ring-white/30 flex-shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-[#0F172A] text-xs font-bold truncate leading-none">{t.to?.fullName.split(' ')[0]}</p>
-                      <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest mt-1.5 truncate">Receives</p>
+                      <p className="text-white text-[12px] font-bold truncate leading-tight">{t.to?.fullName?.split(' ')[0]}</p>
+                      <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest mt-0.5 truncate">Receives</p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0 pl-1">
-                    <p className="text-[#0F172A] font-extrabold text-sm">₹{formatCurrency(t.amount)}</p>
+                    <p className="text-white font-extrabold text-sm">₹{formatCurrency(t.amount)}</p>
                   </div>
                 </div>
 
                 {/* Actions */}
-                <div className="flex gap-2 mt-5 pt-4 border-t border-slate-200">
+                <div className="flex gap-2 mt-4 pt-3 border-t border-white/10 items-center justify-between">
                   {t.from?._id === userId && (
-                    <button
+                    <motion.button
                       onClick={() => createMutation.mutate({ toUserId: t.to?._id, amount: t.amount })}
-                      className="btn-primary btn text-[9px] font-bold tracking-wider px-4 py-2 rounded-lg shadow-sm"
+                      className="btn-primary rounded-full text-[11px] font-bold uppercase tracking-wider px-5 py-2.5 shadow-glow min-h-[44px]"
                       disabled={createMutation.isPending}
+                      whileHover={{ scale: 1.03 }}
+                      whileTap={{ scale: 0.97 }}
                     >
-                      {createMutation.isPending ? <Spinner size="sm" /> : 'Pay Settle'}
-                    </button>
+                      {createMutation.isPending ? <Spinner size="sm" className="border-white" /> : 'Pay Settle'}
+                    </motion.button>
                   )}
                   {t.to?.upiId && (
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500 self-center ml-auto">
-                      UPI Configured
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300 ml-auto">
+                      UPI Ready
                     </span>
                   )}
                 </div>
@@ -252,21 +224,21 @@ export default function SettlementsTab({ tripId }) {
       </div>
 
       {/* Member Balances */}
-      <div className="pt-2">
-        <div className="border-b border-slate-200 pb-3 mb-5">
-          <h3 className="text-sm font-bold text-[#0F172A]">Traveler Balances</h3>
+      <div>
+        <div className="border-b border-white/10 pb-2.5 mb-4">
+          <h3 className="text-[11px] font-bold text-indigo-300 uppercase tracking-[0.2em]">Traveler Balances</h3>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
           {memberBalances.map((mb) => (
-            <div key={mb.user?._id} className="bg-white border border-slate-200 p-4 rounded-xl flex items-center gap-3 shadow-sm">
-              <Avatar src={mb.user?.photo} name={mb.user?.fullName} size="sm" className="ring-2 ring-slate-100" />
+            <div key={mb.user?._id} className="glass p-3 sm:p-4 flex items-center gap-2.5 shadow-sm">
+              <Avatar src={mb.user?.photo} name={mb.user?.fullName} size="sm" className="ring-2 ring-white/30 flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-[#0F172A] text-xs font-bold truncate leading-none">{mb.user?.fullName}</p>
-                <div className="mt-2.5 text-left">
+                <p className="text-white text-[12px] font-bold truncate leading-tight">{mb.user?.fullName}</p>
+                <div className="mt-1 text-left">
                   {mb.stats?.netBalance >= 0 ? (
-                    <p className="text-green-650 font-extrabold text-xs">+₹{formatCurrency(mb.stats.toReceive)}</p>
+                    <p className="text-emerald-400 font-extrabold text-[12px]">+₹{formatCurrency(mb.stats.toReceive)}</p>
                   ) : (
-                    <p className="text-red-650 font-extrabold text-xs">-₹{formatCurrency(mb.stats.toPay)}</p>
+                    <p className="text-rose-400 font-extrabold text-[12px]">-₹{formatCurrency(mb.stats.toPay)}</p>
                   )}
                 </div>
               </div>
@@ -275,13 +247,13 @@ export default function SettlementsTab({ tripId }) {
         </div>
       </div>
 
-      {/* Settlement History */}
+      {/* Settlement Records History */}
       {existingSettlements.length > 0 && (
-        <div className="pt-2">
-          <div className="border-b border-slate-200 pb-3 mb-5">
-            <h3 className="text-sm font-bold text-[#0F172A]">Settlement Records</h3>
+        <div>
+          <div className="border-b border-white/10 pb-2.5 mb-4">
+            <h3 className="text-[11px] font-bold text-indigo-300 uppercase tracking-[0.2em]">Settlement Records</h3>
           </div>
-          <div className="space-y-3">
+          <div className="space-y-2.5">
             {existingSettlements.map((s) => {
               const cfg = statusConfig[s.status] || statusConfig.pending;
               const isFrom = s.from?._id === userId;
@@ -289,71 +261,67 @@ export default function SettlementsTab({ tripId }) {
               const StatusIcon = cfg.icon;
               
               return (
-                <div key={s._id} className="bg-white border border-slate-200 p-5 rounded-[22px] flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm hover:border-slate-350 transition-all duration-300">
-                  <div className="flex items-center gap-3.5 min-w-0 flex-1">
-                    <Avatar src={s.from?.photo} name={s.from?.fullName} size="xs" className="ring-1 ring-black/5" />
-                    <span className="text-[#0F172A] text-xs font-bold truncate max-w-[110px]">{s.from?.fullName}</span>
-                    <ArrowRight size={12} className="text-slate-500 flex-shrink-0 stroke-[2.5]" />
-                    <Avatar src={s.to?.photo} name={s.to?.fullName} size="xs" className="ring-1 ring-black/5" />
-                    <span className="text-[#0F172A] text-xs font-bold truncate max-w-[110px]">{s.to?.fullName}</span>
+                <div key={s._id} className="glass p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                  <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                    <Avatar src={s.from?.photo} name={s.from?.fullName} size="xs" />
+                    <span className="text-white text-[12px] font-bold truncate max-w-[100px]">{s.from?.fullName}</span>
+                    <ArrowRight size={12} className="text-slate-400 flex-shrink-0 stroke-[2.5]" />
+                    <Avatar src={s.to?.photo} name={s.to?.fullName} size="xs" />
+                    <span className="text-white text-[12px] font-bold truncate max-w-[100px]">{s.to?.fullName}</span>
                   </div>
                   
-                  <div className="flex items-center gap-4 justify-end flex-wrap">
-                    <p className="text-[#0F172A] font-extrabold text-xs">₹{formatCurrency(s.amount)}</p>
+                  <div className="flex items-center gap-3 justify-between sm:justify-end flex-wrap">
+                    <p className="text-white font-extrabold text-sm">₹{formatCurrency(s.amount)}</p>
                     
-                    <div className="flex items-center gap-1.5">
-                      <Badge variant={cfg.color} className="flex items-center gap-1 py-1 px-2.5">
+                    <div className="flex items-center gap-2">
+                      <Badge variant={cfg.color} className="flex items-center gap-1 py-1 px-2.5 text-[9px]">
                         <StatusIcon size={10} className="stroke-[2.5]" />
                         <span>{cfg.label}</span>
                       </Badge>
                       {s.paymentScreenshot && (
                         <button 
                           onClick={() => setScreenshotPreview(s.paymentScreenshot)}
-                          className="btn-icon w-7 h-7 rounded-lg text-slate-500 hover:text-[#4F46E5] bg-slate-50 hover:bg-slate-100"
+                          className="w-7 h-7 rounded-full flex items-center justify-center text-slate-300 hover:text-white bg-white/10 hover:bg-white/20 transition-colors"
                           title="View Screenshot Receipt"
                         >
-                          <Eye size={12} />
+                          <Eye size={13} />
                         </button>
                       )}
                     </div>
 
                     <div className="flex gap-2">
-                      {/* Reminders & WhatsApp Actions */}
                       {s.status === 'requested' && isTo && (
                         <button
                           onClick={() => triggerWhatsappRequest(s)}
-                          className="btn-success btn text-[8px] font-bold py-1.5 px-3 rounded-lg flex items-center gap-1 border-transparent"
-                          title="Send reminder to WhatsApp"
+                          className="btn-success rounded-full text-[10px] font-bold py-1.5 px-3 flex items-center gap-1 min-h-[36px]"
                         >
                           <Send size={10} /> Reminder
                         </button>
                       )}
 
-                      {/* Receiver Verification Actions */}
                       {s.status === 'paid' && isTo && (
                         <div className="flex gap-1.5">
                           <button
                             onClick={() => confirmMutation.mutate(s._id)}
                             disabled={confirmMutation.isPending}
-                            className="btn-success btn text-[8px] font-bold py-1.5 px-3 rounded-lg"
+                            className="btn-success rounded-full text-[10px] font-bold py-1.5 px-3 min-h-[36px]"
                           >
                             Verify
                           </button>
                           <button
                             onClick={() => rejectMutation.mutate(s._id)}
                             disabled={rejectMutation.isPending}
-                            className="btn-danger btn text-[8px] font-bold py-1.5 px-3 rounded-lg"
+                            className="btn-danger rounded-full text-[10px] font-bold py-1.5 px-3 min-h-[36px]"
                           >
                             Reject
                           </button>
                         </div>
                       )}
 
-                      {/* Payer Settle Actions */}
                       {s.status === 'requested' && isFrom && (
                         <button
                           onClick={() => openQR(s)}
-                          className="btn-primary btn text-[8px] font-bold py-1.5 px-3 rounded-lg"
+                          className="btn-primary rounded-full text-[10px] font-bold py-1.5 px-3 shadow-glow min-h-[36px]"
                         >
                           Pay UPI
                         </button>
@@ -370,161 +338,102 @@ export default function SettlementsTab({ tripId }) {
       {/* Payment checkout modal */}
       <Modal isOpen={!!payModal} onClose={() => { setPayModal(null); setScreenshotFile(null); setUpiRef(''); }} title="UPI Settlement Checkout" size="sm">
         {payModal && (
-          <div className="space-y-6 py-2 text-center text-[#0F172A]">
+          <div className="space-y-5 py-2 text-center text-white">
             {payModal.qrCode ? (
               <div className="flex flex-col items-center">
-                <div className="p-3 bg-white border border-slate-200 rounded-2xl shadow-float flex-center select-none">
+                <div className="p-3 bg-white border border-white/80 rounded-[22px] shadow-lg flex items-center justify-center select-none">
                   <img src={payModal.qrCode} alt="UPI QR Code" className="w-40 h-40 object-contain" />
                 </div>
-                <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest mt-2">Scan with GPay, PhonePe, Paytm, or BHIM</p>
-                {!isMobileDevice() && (
-                  <p className="text-[10px] text-slate-500 mt-2 max-w-[220px]">
-                    Open your UPI app on your phone and scan this code to pay.
-                  </p>
-                )}
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Scan with GPay, PhonePe, Paytm, or BHIM</p>
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="w-16 h-16 bg-slate-50 border border-slate-200 rounded-2xl flex-center mx-auto text-2xl">
+                <div className="w-14 h-14 bg-indigo-500/20 border border-indigo-500/30 rounded-[18px] flex items-center justify-center mx-auto text-2xl">
                   💳
                 </div>
-                <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-left space-y-1">
-                  <p className="text-amber-800 text-xs font-bold">{payModal.to?.fullName || 'This traveler'} hasn't added a UPI ID yet</p>
-                  <p className="text-amber-750 text-[11px]">Ask them to add one under Profile → UPI Payment Details. You can still record this settlement manually below once you've paid them another way.</p>
-                </div>
+                <p className="text-xs text-slate-400">Direct UPI links or Manual reference pay</p>
               </div>
             )}
 
-            <div>
-              <p className="text-slate-500 text-xs font-semibold">Paying {payModal.to?.fullName || 'Receiver'}</p>
-              <p className="text-[#4F46E5] font-extrabold text-xl mt-1.5">₹{formatCurrency(payModal.amount)}</p>
+            <div className="p-3 rounded-[18px] bg-white/8 border border-white/15">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Amount to Pay</p>
+              <p className="text-2xl font-black text-white tracking-tight mt-0.5">₹{formatCurrency(payModal.amount)}</p>
+              <p className="text-xs text-indigo-300 font-semibold mt-1">To: {payModal.to?.fullName}</p>
             </div>
 
-            {payModal.to?.upiId && (
-              <div className="space-y-2 text-left">
-                <label className="label text-[9px] tracking-wider mb-1">Recipient UPI ID</label>
-                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5">
-                  <span className="text-[#0F172A] font-mono text-xs flex-1 truncate">{payModal.to.upiId}</span>
-                  <button
-                    onClick={() => copyUPI(payModal.to.upiId)}
-                    className="btn-ghost btn text-[9px] uppercase font-bold tracking-wider px-2.5 py-1.5 rounded-lg border-slate-200 w-20 flex-shrink-0"
-                  >
-                    {copiedId ? <Check size={11} className="text-green-500" /> : <Copy size={11} />}
-                    <span>{copiedId ? 'Copied' : 'Copy'}</span>
-                  </button>
-                </div>
+            {/* Quick UPI App Launchers */}
+            {payModal.upiLink && (
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() => handleDeepLink('gpay')}
+                  className="p-2.5 rounded-[14px] bg-white/10 hover:bg-white/20 border border-white/15 text-[11px] font-bold transition-all"
+                >
+                  Google Pay
+                </button>
+                <button
+                  onClick={() => handleDeepLink('phonepe')}
+                  className="p-2.5 rounded-[14px] bg-white/10 hover:bg-white/20 border border-white/15 text-[11px] font-bold transition-all"
+                >
+                  PhonePe
+                </button>
+                <button
+                  onClick={() => handleDeepLink('paytm')}
+                  className="p-2.5 rounded-[14px] bg-white/10 hover:bg-white/20 border border-white/15 text-[11px] font-bold transition-all"
+                >
+                  Paytm
+                </button>
               </div>
             )}
 
-            {/* Launch App Buttons — mobile only */}
-            {payModal.upiLink && isMobileDevice() && (
-              <div className="space-y-3">
-                <label className="label text-xs text-left">Open UPI App to Pay</label>
-                <div className="grid grid-cols-3 gap-2">
-                  <button 
-                    onClick={() => launchUPIApp('gpay')} 
-                    className="py-2.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] text-xs font-bold text-[#0F172A] transition-colors duration-305 hover:bg-slate-50"
-                  >
-                    Google Pay
-                  </button>
-                  <button 
-                    onClick={() => launchUPIApp('phonepe')} 
-                    className="py-2.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] text-xs font-bold text-[#0F172A] transition-colors duration-305 hover:bg-slate-50"
-                  >
-                    PhonePe
-                  </button>
-                  <button 
-                    onClick={() => launchUPIApp('paytm')} 
-                    className="py-2.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] text-xs font-bold text-[#0F172A] transition-colors duration-305 hover:bg-slate-50"
-                  >
-                    Paytm
-                  </button>
-                  <button 
-                    onClick={() => launchUPIApp('bhim')} 
-                    className="py-2.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] text-xs font-bold text-[#0F172A] transition-colors duration-305 hover:bg-slate-50"
-                  >
-                    BHIM
-                  </button>
-                  <button 
-                    onClick={() => launchUPIApp('amazon')} 
-                    className="py-2.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] text-xs font-bold text-[#0F172A] transition-colors duration-305 hover:bg-slate-50"
-                  >
-                    Amazon Pay
-                  </button>
-                  <button 
-                    onClick={() => launchUPIApp('cred')} 
-                    className="py-2.5 px-2 rounded-xl bg-white border border-slate-200 hover:border-[#4F46E5] text-xs font-bold text-[#0F172A] transition-colors duration-305 hover:bg-slate-50"
-                  >
-                    Cred UPI
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Screenshot upload form */}
-            <form onSubmit={handleFormSubmit} className="space-y-4 pt-4 border-t border-slate-200 text-left">
+            {/* Submission Form */}
+            <form onSubmit={handleFormSubmit} className="space-y-3 pt-2 border-t border-white/10 text-left">
               <div>
-                <label className="label text-[9px] tracking-wider">Transaction ID / UPI Reference (Optional)</label>
-                <input 
-                  type="text" 
-                  value={upiRef} 
-                  onChange={e => setUpiRef(e.target.value)} 
-                  placeholder="e.g. 302910481239" 
-                  className="input bg-white border-slate-200" 
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">UPI Ref / UTR No (Optional)</label>
+                <input
+                  type="text"
+                  value={upiRef}
+                  onChange={e => setUpiRef(e.target.value)}
+                  placeholder="12-digit UTR No..."
+                  style={{
+                    background: 'rgba(255,255,255,0.08)',
+                    border: '1px solid rgba(255,255,255,0.15)',
+                    borderRadius: '14px',
+                    padding: '10px 14px',
+                    fontSize: '13px',
+                    color: '#f1f5f9',
+                    width: '100%',
+                    outline: 'none',
+                  }}
                 />
               </div>
 
               <div>
-                <label className="label text-[9px] tracking-wider">Upload Payment Screenshot Receipt</label>
-                <div className="relative border border-dashed border-slate-200 hover:border-[#4F46E5] rounded-xl p-5 text-center cursor-pointer transition-colors duration-300 bg-slate-50">
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    onChange={handleFileChange} 
-                    className="absolute inset-0 opacity-0 cursor-pointer" 
-                  />
-                  <div className="flex flex-col items-center gap-2">
-                    <Upload size={20} className="text-slate-500" />
-                    <p className="text-[#0F172A] text-[10px] font-bold uppercase tracking-wider">
-                      {screenshotFile ? screenshotFile.name : 'Select or drop image'}
-                    </p>
-                    <p className="text-slate-500/60 text-[8px] font-bold uppercase tracking-wider">JPEG, PNG formats up to 5MB</p>
-                  </div>
-                </div>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Upload Payment Screenshot</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-500/20 file:text-indigo-300 hover:file:bg-indigo-500/30"
+                />
               </div>
 
               <button
                 type="submit"
                 disabled={uploading || markPaidMutation.isPending}
-                className="btn-primary btn w-full gap-2 py-3 mt-2 text-[10px] tracking-wider font-bold uppercase shadow-glow-sm"
+                className="w-full btn-primary py-3 rounded-full text-xs font-bold uppercase tracking-wider shadow-glow min-h-[48px] mt-2"
               >
-                {uploading ? (
-                  <>
-                    <RefreshCw size={13} className="animate-spin" />
-                    <span>Uploading receipt...</span>
-                  </>
-                ) : (
-                  <>
-                    <Check size={13} className="stroke-[2.5]" />
-                    <span>Submit Payment Claim</span>
-                  </>
-                )}
+                {uploading || markPaidMutation.isPending ? 'Submitting Verification...' : 'Submit Payment Proof'}
               </button>
             </form>
           </div>
         )}
       </Modal>
 
-      {/* Lightbox Screenshot Modal */}
-      <Modal isOpen={!!screenshotPreview} onClose={() => setScreenshotPreview(null)} title="Payment Receipt Verification" size="sm">
+      {/* Screenshot Preview Modal */}
+      <Modal isOpen={!!screenshotPreview} onClose={() => setScreenshotPreview(null)} title="Payment Proof Screenshot" size="md">
         {screenshotPreview && (
-          <div className="text-center space-y-4 text-[#0F172A]">
-            <div className="border border-slate-200 rounded-2xl overflow-hidden bg-slate-50 flex-center">
-              <img src={screenshotPreview} alt="Payment Receipt" className="max-h-[400px] object-contain" />
-            </div>
-            <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">
-              Please double check the transaction amount and date against your bank statements before confirming.
-            </p>
+          <div className="p-2 text-center">
+            <img src={screenshotPreview} alt="Proof Screenshot" className="max-h-[70vh] w-auto mx-auto rounded-[18px] border border-white/20 shadow-2xl object-contain" />
           </div>
         )}
       </Modal>
