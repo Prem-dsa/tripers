@@ -25,4 +25,11 @@ async function bootstrap() {
   );
 }
 
+// Unregister stale service worker cache in dev mode
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.getRegistrations().then(registrations => {
+    registrations.forEach(r => r.unregister());
+  });
+}
+
 bootstrap();
