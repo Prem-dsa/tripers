@@ -97,19 +97,22 @@ export default function ChatTab({ tripId }) {
   }, []);
 
   return (
-    <div className="flex flex-col" style={{ height: '60vh' }}>
+    <div className="flex flex-col bg-white/50 backdrop-blur-[30px] border border-white/60 rounded-[32px] p-6 shadow-sm overflow-hidden" style={{ height: '64vh' }}>
       {/* Status bar */}
-      <div className="flex items-center gap-2 mb-3">
-        <div className={clsx('w-2 h-2 rounded-full', connected ? 'bg-green-400' : 'bg-red-400')} />
-        <span className="text-dark-400 text-xs">{connected ? 'Connected' : 'Reconnecting...'}</span>
+      <div className="flex items-center justify-between pb-4 border-b border-slate-200/60 mb-4">
+        <div className="flex items-center gap-2">
+          <div className={clsx('w-2.5 h-2.5 rounded-full', connected ? 'bg-success shadow-glow' : 'bg-danger animate-pulse')} />
+          <span className="text-slate-500 text-[11px] font-bold uppercase tracking-widest">{connected ? 'Live Chat Connected' : 'Reconnecting...'}</span>
+        </div>
+        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">{messages.length} messages</span>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+      <div className="flex-1 overflow-y-auto space-y-2 pr-1 no-scrollbar">
         {isLoading ? (
-          <div className="flex-center py-8"><Spinner /></div>
+          <div className="flex items-center justify-center py-12"><Spinner /></div>
         ) : !messages.length ? (
-          <EmptyState icon={<MessageCircle size={32} className="text-dark-600" />} title="No messages yet" description="Start the conversation!" />
+          <EmptyState icon={<MessageCircle size={32} className="text-primary-500" />} title="No messages yet" description="Start the group conversation!" />
         ) : (
           <>
             {groupedMessages.map((msg, i) => {
@@ -117,27 +120,27 @@ export default function ChatTab({ tripId }) {
               return (
                 <motion.div
                   key={msg._id || i}
-                  initial={{ opacity: 0, y: 5 }}
+                  initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className={clsx('flex gap-2', isMe ? 'flex-row-reverse' : 'flex-row', !msg.showAvatar && 'ml-8')}
+                  className={clsx('flex gap-2.5', isMe ? 'flex-row-reverse' : 'flex-row', !msg.showAvatar && 'ml-9')}
                 >
                   {msg.showAvatar && (
-                    <Avatar src={msg.sender?.photo} name={msg.sender?.fullName} size="sm" className="flex-shrink-0 mt-auto" />
+                    <Avatar src={msg.sender?.photo} name={msg.sender?.fullName} size="xs" className="flex-shrink-0 mt-auto shadow-sm" />
                   )}
-                  <div className={clsx('max-w-xs sm:max-w-sm', !msg.showAvatar && (isMe ? 'mr-8' : 'ml-0'))}>
+                  <div className={clsx('max-w-xs sm:max-w-md', !msg.showAvatar && (isMe ? 'mr-9' : 'ml-0'))}>
                     {msg.showName && !isMe && (
-                      <p className="text-primary-400 text-xs font-semibold mb-1 ml-1">{msg.sender?.fullName}</p>
+                      <p className="text-primary-500 text-[10px] font-bold uppercase tracking-wider mb-1 ml-1">{msg.sender?.fullName}</p>
                     )}
                     <div className={clsx(
-                      'px-3.5 py-2.5 rounded-2xl text-sm leading-relaxed',
+                      'px-4 py-3 rounded-[20px] text-[13px] leading-relaxed font-medium shadow-sm transition-all',
                       isMe
-                        ? 'bg-gradient-to-br from-primary-400 to-purple-500 text-white rounded-br-sm'
-                        : 'bg-white/8 text-dark-100 rounded-bl-sm',
+                        ? 'bg-gradient-to-br from-primary-500 to-purple-500 text-white rounded-br-xs shadow-glow'
+                        : 'bg-white/80 border border-white text-slate-800 rounded-bl-xs',
                       msg.isDeleted && 'opacity-50 italic'
                     )}>
                       {msg.isDeleted ? 'This message was deleted' : msg.content}
                     </div>
-                    <p className={clsx('text-dark-500 text-xs mt-0.5', isMe ? 'text-right' : 'text-left')}>
+                    <p className={clsx('text-slate-400 text-[10px] font-bold mt-1 uppercase tracking-wider', isMe ? 'text-right' : 'text-left')}>
                       {formatMsgTime(msg.createdAt)}
                     </p>
                   </div>
@@ -147,10 +150,10 @@ export default function ChatTab({ tripId }) {
 
             {/* Typing indicator */}
             {typingUsers.length > 0 && (
-              <div className="flex items-center gap-2 ml-10">
-                <div className="bg-white/8 rounded-full px-3 py-2 flex gap-1">
+              <div className="flex items-center gap-2 ml-10 my-2">
+                <div className="bg-white/80 border border-white rounded-full px-4 py-2.5 flex items-center gap-1.5 shadow-sm">
                   {[1, 2, 3].map(i => (
-                    <div key={i} className="w-1.5 h-1.5 bg-dark-300 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                    <div key={i} className="w-1.5 h-1.5 bg-primary-500 rounded-full animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
                   ))}
                 </div>
               </div>
@@ -161,23 +164,25 @@ export default function ChatTab({ tripId }) {
       </div>
 
       {/* Input */}
-      <div className="mt-3 flex gap-2">
+      <div className="mt-4 pt-3 border-t border-slate-200/60 flex items-center gap-3">
         <textarea
           value={input}
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
-          placeholder="Type a message... (Enter to send)"
+          placeholder="Type a message..."
           rows={1}
-          className="input flex-1 resize-none text-sm py-2.5 min-h-10"
+          className="flex-1 bg-white/70 border border-white/80 focus:border-primary-300 focus:bg-white px-5 py-3 text-[13px] font-medium text-slate-800 placeholder:text-slate-400 rounded-full transition-all shadow-sm outline-none resize-none min-h-[44px]"
           style={{ maxHeight: '100px' }}
         />
-        <button
+        <motion.button
           onClick={sendMessage}
           disabled={!input.trim()}
-          className="btn-primary btn p-2.5 flex-shrink-0"
+          className="w-11 h-11 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-glow flex-shrink-0 disabled:opacity-40"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
         >
-          <Send size={18} />
-        </button>
+          <Send size={16} />
+        </motion.button>
       </div>
     </div>
   );
