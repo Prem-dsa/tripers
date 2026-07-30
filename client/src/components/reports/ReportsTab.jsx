@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Download, FileText, Table, FileSpreadsheet } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { reportApi } from '../../api';
 import { GlassCard, EmptyState, Spinner, Avatar } from '../ui/index';
 import { formatCurrency } from '../../utils/currency';
@@ -20,10 +21,9 @@ export default function ReportsTab({ tripId, trip }) {
       const { default: autoTable } = await import('jspdf-autotable');
       const doc = new jsPDF();
 
-      // Header
       doc.setFontSize(22);
-      doc.setTextColor(108, 99, 255);
-      doc.text('TripSplit AI — Trip Report', 14, 20);
+      doc.setTextColor(124, 92, 252);
+      doc.text('Tripers — Trip Report', 14, 20);
 
       doc.setFontSize(12);
       doc.setTextColor(60, 60, 80);
@@ -31,7 +31,6 @@ export default function ReportsTab({ tripId, trip }) {
       doc.text(`Destination: ${summaryData?.trip?.destination}`, 14, 40);
       doc.text(`Generated: ${format(new Date(), 'MMM d, yyyy')}`, 14, 48);
 
-      // Summary
       doc.setFontSize(14);
       doc.setTextColor(0, 0, 0);
       doc.text('Summary', 14, 62);
@@ -45,10 +44,9 @@ export default function ReportsTab({ tripId, trip }) {
           ['Number of Members', summaryData?.trip?.members?.length || 0],
         ],
         styles: { fillColor: [245, 245, 255] },
-        headStyles: { fillColor: [108, 99, 255] },
+        headStyles: { fillColor: [124, 92, 252] },
       });
 
-      // Expenses
       doc.text('Expenses', 14, doc.lastAutoTable.finalY + 14);
       autoTable(doc, {
         startY: doc.lastAutoTable.finalY + 20,
@@ -60,10 +58,9 @@ export default function ReportsTab({ tripId, trip }) {
           e.paidBy?.fullName || '',
           `₹${formatCurrency(e.amount)}`,
         ]),
-        headStyles: { fillColor: [108, 99, 255] },
+        headStyles: { fillColor: [124, 92, 252] },
       });
 
-      // Member contributions
       doc.addPage();
       doc.text('Member Contributions', 14, 20);
       autoTable(doc, {
@@ -75,10 +72,10 @@ export default function ReportsTab({ tripId, trip }) {
           `₹${formatCurrency(m.stats?.totalShare || 0)}`,
           m.stats?.netBalance >= 0 ? `+₹${formatCurrency(m.stats?.toReceive)}` : `-₹${formatCurrency(m.stats?.toPay)}`,
         ]),
-        headStyles: { fillColor: [108, 99, 255] },
+        headStyles: { fillColor: [124, 92, 252] },
       });
 
-      doc.save(`TripSplit_${summaryData?.trip?.name?.replace(/\s/g, '_')}_Report.pdf`);
+      doc.save(`Tripers_${summaryData?.trip?.name?.replace(/\s/g, '_')}_Report.pdf`);
       toast.success('PDF exported!');
     } catch (err) {
       console.error(err);
@@ -91,7 +88,6 @@ export default function ReportsTab({ tripId, trip }) {
       const XLSX = await import('xlsx');
       const wb = XLSX.utils.book_new();
 
-      // Expenses sheet
       const expData = (summaryData?.expenses || []).map(e => ({
         Date: format(new Date(e.date), 'MMM d, yyyy'),
         Name: e.name,
@@ -103,7 +99,6 @@ export default function ReportsTab({ tripId, trip }) {
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(expData), 'Expenses');
 
-      // Members sheet
       const memberData = (summaryData?.memberContributions || []).map(m => ({
         Name: m.user?.fullName,
         'Total Paid': m.stats?.totalPaid,
@@ -114,7 +109,6 @@ export default function ReportsTab({ tripId, trip }) {
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(memberData), 'Members');
 
-      // Settlements sheet
       const settData = (summaryData?.settlements || []).map(s => ({
         From: s.from?.fullName,
         To: s.to?.fullName,
@@ -123,7 +117,7 @@ export default function ReportsTab({ tripId, trip }) {
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(settData), 'Settlements');
 
-      XLSX.writeFile(wb, `TripSplit_${summaryData?.trip?.name?.replace(/\s/g, '_')}.xlsx`);
+      XLSX.writeFile(wb, `Tripers_${summaryData?.trip?.name?.replace(/\s/g, '_')}.xlsx`);
       toast.success('Excel exported!');
     } catch { toast.error('Export failed'); }
   };
@@ -138,87 +132,102 @@ export default function ReportsTab({ tripId, trip }) {
     const csv = rows.map(r => r.map(c => `"${c}"`).join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = `TripSplit_Expenses.csv`; a.click();
+    const a = document.createElement('a'); a.href = url; a.download = `Tripers_Expenses.csv`; a.click();
     toast.success('CSV exported!');
   };
 
-  if (isLoading) return <div className="flex-center py-12"><Spinner /></div>;
+  if (isLoading) return <div className="flex items-center justify-center py-12"><Spinner /></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Export Buttons */}
       <div>
-        <h3 className="font-bold text-white mb-3">Export Reports</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <button onClick={exportPDF} className="glass-sm p-4 rounded-xl flex items-center gap-3 hover:bg-white/8 transition-all group">
-            <div className="w-10 h-10 bg-red-500/20 rounded-xl flex-center group-hover:bg-red-500/30 transition-colors">
-              <FileText size={20} className="text-red-400" />
+        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-4">Export Reports</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <motion.button
+            onClick={exportPDF}
+            className="p-5 bg-white/70 backdrop-blur-[30px] border border-white/60 rounded-[24px] flex items-center gap-4 hover:shadow-float hover:bg-white transition-all duration-300 group shadow-sm text-left"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="w-11 h-11 bg-rose-50 border border-rose-100 rounded-[16px] flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FileText size={20} className="text-rose-500" />
             </div>
-            <div className="text-left">
-              <p className="text-white font-semibold text-sm">Trip Summary PDF</p>
-              <p className="text-dark-400 text-xs">Full report with charts</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-slate-800 font-bold text-[13px]">Trip Summary PDF</p>
+              <p className="text-slate-500 text-[11px] font-medium mt-0.5">Full report with charts</p>
             </div>
-            <Download size={16} className="text-dark-400 ml-auto" />
-          </button>
+            <Download size={16} className="text-slate-400 group-hover:text-primary-500 transition-colors flex-shrink-0" />
+          </motion.button>
 
-          <button onClick={exportExcel} className="glass-sm p-4 rounded-xl flex items-center gap-3 hover:bg-white/8 transition-all group">
-            <div className="w-10 h-10 bg-green-500/20 rounded-xl flex-center group-hover:bg-green-500/30 transition-colors">
-              <FileSpreadsheet size={20} className="text-green-400" />
+          <motion.button
+            onClick={exportExcel}
+            className="p-5 bg-white/70 backdrop-blur-[30px] border border-white/60 rounded-[24px] flex items-center gap-4 hover:shadow-float hover:bg-white transition-all duration-300 group shadow-sm text-left"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="w-11 h-11 bg-emerald-50 border border-emerald-100 rounded-[16px] flex items-center justify-center group-hover:scale-110 transition-transform">
+              <FileSpreadsheet size={20} className="text-emerald-500" />
             </div>
-            <div className="text-left">
-              <p className="text-white font-semibold text-sm">Excel Workbook</p>
-              <p className="text-dark-400 text-xs">Expenses, members, settlements</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-slate-800 font-bold text-[13px]">Excel Workbook</p>
+              <p className="text-slate-500 text-[11px] font-medium mt-0.5">Expenses & members</p>
             </div>
-            <Download size={16} className="text-dark-400 ml-auto" />
-          </button>
+            <Download size={16} className="text-slate-400 group-hover:text-primary-500 transition-colors flex-shrink-0" />
+          </motion.button>
 
-          <button onClick={exportCSV} className="glass-sm p-4 rounded-xl flex items-center gap-3 hover:bg-white/8 transition-all group">
-            <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex-center group-hover:bg-blue-500/30 transition-colors">
-              <Table size={20} className="text-blue-400" />
+          <motion.button
+            onClick={exportCSV}
+            className="p-5 bg-white/70 backdrop-blur-[30px] border border-white/60 rounded-[24px] flex items-center gap-4 hover:shadow-float hover:bg-white transition-all duration-300 group shadow-sm text-left"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <div className="w-11 h-11 bg-blue-50 border border-blue-100 rounded-[16px] flex items-center justify-center group-hover:scale-110 transition-transform">
+              <Table size={20} className="text-blue-500" />
             </div>
-            <div className="text-left">
-              <p className="text-white font-semibold text-sm">CSV Expenses</p>
-              <p className="text-dark-400 text-xs">Raw data for spreadsheets</p>
+            <div className="flex-1 min-w-0">
+              <p className="text-slate-800 font-bold text-[13px]">CSV Expenses</p>
+              <p className="text-slate-500 text-[11px] font-medium mt-0.5">Raw data spreadsheet</p>
             </div>
-            <Download size={16} className="text-dark-400 ml-auto" />
-          </button>
+            <Download size={16} className="text-slate-400 group-hover:text-primary-500 transition-colors flex-shrink-0" />
+          </motion.button>
         </div>
       </div>
 
       {/* Expense Summary Table */}
-      <div>
-        <h3 className="font-bold text-white mb-3">Expense Summary</h3>
-        <div className="glass-sm rounded-xl overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="table-auto w-full">
-              <thead><tr>
-                <th className="p-3 text-left text-dark-400 text-xs uppercase">Date</th>
-                <th className="p-3 text-left text-dark-400 text-xs uppercase">Expense</th>
-                <th className="p-3 text-left text-dark-400 text-xs uppercase">Category</th>
-                <th className="p-3 text-left text-dark-400 text-xs uppercase">Paid By</th>
-                <th className="p-3 text-right text-dark-400 text-xs uppercase">Amount</th>
-              </tr></thead>
-              <tbody>
-                {(summaryData?.expenses || []).map(e => (
-                  <tr key={e._id} className="border-t border-white/5 hover:bg-white/3 transition-all">
-                    <td className="p-3 text-dark-400 text-xs">{format(new Date(e.date), 'MMM d')}</td>
-                    <td className="p-3 text-dark-100 text-sm font-medium">{e.name}</td>
-                    <td className="p-3"><span className="text-sm">{CAT_ICONS[e.category]}</span> <span className="text-dark-300 text-xs capitalize">{e.category}</span></td>
-                    <td className="p-3 text-dark-200 text-sm">{e.paidBy?.fullName}</td>
-                    <td className="p-3 text-right text-white font-semibold text-sm">₹{formatCurrency(e.amount)}</td>
-                  </tr>
-                ))}
-                {summaryData?.expenses?.length > 0 && (
-                  <tr className="border-t-2 border-white/15 bg-white/3">
-                    <td colSpan={4} className="p-3 text-right text-dark-200 font-semibold">Total</td>
-                    <td className="p-3 text-right text-primary-400 font-bold">₹{formatCurrency(summaryData?.totalExpense || 0)}</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+      <GlassCard className="!p-8 bg-white/70 backdrop-blur-[30px] border-white/60 shadow-sm rounded-[28px] overflow-hidden">
+        <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] border-b border-slate-200/60 pb-3 mb-6">Expense Summary</h3>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-200/60">
+                <th className="pb-3 text-slate-400 text-[10px] font-bold uppercase tracking-widest">Date</th>
+                <th className="pb-3 text-slate-400 text-[10px] font-bold uppercase tracking-widest">Expense</th>
+                <th className="pb-3 text-slate-400 text-[10px] font-bold uppercase tracking-widest">Category</th>
+                <th className="pb-3 text-slate-400 text-[10px] font-bold uppercase tracking-widest">Paid By</th>
+                <th className="pb-3 text-right text-slate-400 text-[10px] font-bold uppercase tracking-widest">Amount</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 text-[13px]">
+              {(summaryData?.expenses || []).map(e => (
+                <tr key={e._id} className="hover:bg-white/60 transition-colors">
+                  <td className="py-3.5 text-slate-400 font-medium">{format(new Date(e.date), 'MMM d')}</td>
+                  <td className="py-3.5 text-slate-800 font-bold">{e.name}</td>
+                  <td className="py-3.5"><span className="mr-1.5">{CAT_ICONS[e.category]}</span> <span className="text-slate-500 font-semibold capitalize text-xs">{e.category}</span></td>
+                  <td className="py-3.5 text-slate-600 font-medium">{e.paidBy?.fullName}</td>
+                  <td className="py-3.5 text-right text-slate-800 font-bold">₹{formatCurrency(e.amount)}</td>
+                </tr>
+              ))}
+              {summaryData?.expenses?.length > 0 && (
+                <tr className="border-t-2 border-slate-200 font-bold bg-white/40">
+                  <td colSpan={4} className="py-4 text-right text-slate-500 uppercase tracking-widest text-[11px]">Total</td>
+                  <td className="py-4 text-right text-primary-500 font-extrabold text-base">₹{formatCurrency(summaryData?.totalExpense || 0)}</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }
