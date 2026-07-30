@@ -1,6 +1,8 @@
 import { Outlet } from 'react-router-dom';
 import { Sidebar } from './ui/Sidebar';
 import { Navbar } from './ui/Navbar';
+import { BottomNavigation } from './ui/BottomNavigation';
+import { MobileDrawer } from './ui/MobileDrawer';
 import { AmbientBackground } from './three/AmbientBackground';
 import { NotificationPanel } from './notifications/NotificationPanel';
 import { Toaster } from 'react-hot-toast';
@@ -24,42 +26,65 @@ export function AppLayout() {
   }, [isAuthenticated]);
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-[#F8FAFC]">
-      <AmbientBackground />
-      <Sidebar />
+    <>
+      {/* Root Layout */}
+      <div
+        className="flex bg-slate-950 text-slate-100"
+        style={{ height: '100svh' }}
+      >
+        {/* Three.js Ambient Background */}
+        <AmbientBackground />
 
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative z-10">
-        <Navbar />
+        {/* Floating Sidebar (Desktop: >1024px, Tablet: 768-1023px mini) */}
+        <Sidebar />
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="p-4 sm:p-6 pb-6 min-h-full max-w-full">
-            <Outlet />
-          </div>
-        </main>
+        {/* Main Content Column */}
+        <div className="flex-1 flex flex-col min-w-0 relative z-10" style={{ minWidth: 0 }}>
+          {/* Sticky Top Navbar */}
+          <Navbar />
+
+          {/* Scrollable Page Content */}
+          <main
+            className="flex-1 overflow-y-auto overflow-x-hidden"
+            style={{
+              paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 88px)',
+            }}
+          >
+            <div className="p-3 sm:p-4 lg:p-6 lg:pb-6 max-w-[1400px] mx-auto w-full">
+              <Outlet />
+            </div>
+          </main>
+        </div>
       </div>
 
+      {/* Mobile Slide Drawer (Triggered by Hamburger) */}
+      <MobileDrawer />
+
+      {/* Mobile Bottom Navigation with Center FAB (+) Action Sheet */}
+      <BottomNavigation />
 
       {/* Overlays */}
       <NotificationPanel />
       <Toaster
-        position="bottom-right"
+        position="top-center"
         toastOptions={{
           style: {
-            background: '#ffffff',
-            color: '#1E1B4B',
-            border: '1px solid #E9E2FF',
-            borderRadius: '16px',
-            fontSize: '13px',
+            background: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(30px)',
+            color: '#F1F5F9',
+            border: '1px solid rgba(255, 255, 255, 0.15)',
+            borderRadius: '18px',
+            fontSize: '14px',
             fontWeight: '600',
-            boxShadow: '0 12px 40px rgba(109,74,255,0.12)',
-            fontFamily: 'Inter, sans-serif',
+            boxShadow: '0 10px 40px rgba(0, 0, 0, 0.4)',
+            fontFamily: '"SF Pro Display", Inter, sans-serif',
+            padding: '12px 20px',
+            maxWidth: '380px',
           },
-          success: { iconTheme: { primary: '#6D4AFF', secondary: '#fff' } },
-          error:   { iconTheme: { primary: '#EF4444', secondary: '#fff' } },
+          success: { iconTheme: { primary: '#34D399', secondary: '#0f172a' } },
+          error:   { iconTheme: { primary: '#F87171', secondary: '#0f172a' } },
         }}
       />
-    </div>
+    </>
   );
 }
-
