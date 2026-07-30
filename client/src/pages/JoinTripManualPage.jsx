@@ -12,7 +12,7 @@ export default function JoinTripManualPage() {
   const [error, setError] = useState('');
   const [scanning, setScanning] = useState(false);
   const [recentInvites, setRecentInvites] = useState([]);
-  const [showSuccessScreen, setShowSuccessScreen] = useState(null); // stores joined trip name if successful
+  const [showSuccessScreen, setShowSuccessScreen] = useState(null);
   const navigate = useNavigate();
 
   // Load history on mount
@@ -47,28 +47,23 @@ export default function JoinTripManualPage() {
     },
   });
 
-  // Bugfix: Parse and clean full invite codes/URLs
   const parseInviteCode = (value) => {
     const trimmed = value.trim();
-    // 1. Extract from standard URL segment /join/CODE
     const joinMatch = trimmed.match(/\/join\/([A-Za-z0-9_-]+)/i);
     if (joinMatch && joinMatch[1]) {
       return joinMatch[1].toUpperCase();
     }
-    // 2. Extract from URL query parameter ?code=CODE
     try {
       if (trimmed.startsWith('http') || trimmed.includes('/')) {
         const url = new URL(trimmed);
         const codeParam = url.searchParams.get('code') || url.searchParams.get('invite');
         if (codeParam) return codeParam.toUpperCase();
         
-        // Otherwise grab last path segment
         const paths = url.pathname.split('/').filter(Boolean);
         if (paths.length > 0) return paths[paths.length - 1].toUpperCase();
       }
     } catch(e) { }
 
-    // 3. Fallback: Clean formatting, remove symbols, force uppercase
     return trimmed.replace(/[^A-Za-z0-9_-]/g, '').toUpperCase();
   };
 
@@ -88,7 +83,6 @@ export default function JoinTripManualPage() {
     mutation.mutate(joinCode);
   };
 
-  // OCR QR/Invite Code extraction using Tesseract
   const handleQrUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -104,7 +98,6 @@ export default function JoinTripManualPage() {
       );
       
       const parsedCode = parseInviteCode(text);
-      // Scan for code match (specifically searching for code patterns)
       const codeMatch = text.match(/code[:\s]+([A-Z0-9_-]{6,16})/i) || text.match(/\/join\/([A-Z0-9_-]{6,16})/i) || text.match(/\b([A-Z0-9_-]{12})\b/i);
       
       if (codeMatch && codeMatch[1]) {
@@ -120,35 +113,44 @@ export default function JoinTripManualPage() {
         toast.error("Could not find a valid invite code in screenshot text. Please type manually.");
       }
     } catch (err) {
-      toast.error("Failed to perform OCR scanner check on this image.");
+      toast.error("Failed to perform scanner check on this image.");
     } finally {
       setScanning(false);
     }
   };
 
   return (
-    <div className="max-w-md mx-auto space-y-8 pb-12 px-2">
+    <div className="max-w-[480px] mx-auto space-y-8 pb-12 px-4 relative">
+      
+      {/* Background Decorative Blurs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden -z-10">
+        <div className="absolute top-10 left-0 w-64 h-64 bg-primary-200 rounded-full blur-[80px] opacity-30" />
+        <div className="absolute bottom-10 right-0 w-64 h-64 bg-secondary-200 rounded-full blur-[80px] opacity-30" />
+      </div>
+
       {/* Join Animation Overlay */}
       <AnimatePresence>
         {showSuccessScreen && (
           <motion.div 
-            className="fixed inset-0 bg-dark-950/95 backdrop-blur-xl flex flex-col items-center justify-center z-50 p-6 text-center"
+            className="fixed inset-0 bg-white/80 backdrop-blur-2xl flex flex-col items-center justify-center z-50 p-6 text-center"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
+              initial={{ scale: 0.8, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
               transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-              className="space-y-4"
+              className="space-y-6 flex flex-col items-center"
             >
-              <div className="w-20 h-20 bg-green-500/10 rounded-full flex-center mx-auto border border-green-500/20 text-green-400 mb-6 shadow-glow-success">
-                <CheckCircle size={40} className="stroke-[2.5]" />
+              <div className="w-24 h-24 bg-success/10 rounded-full flex items-center justify-center border-2 border-success/20 text-success shadow-[0_0_40px_rgba(34,197,94,0.2)]">
+                <CheckCircle size={48} className="stroke-[2.5]" />
               </div>
-              <h2 className="text-2xl font-extrabold text-white tracking-tight uppercase">Successfully Joined!</h2>
-              <p className="text-primary-300 font-extrabold text-lg capitalize">"{showSuccessScreen.name}"</p>
-              <p className="text-dark-400 text-xs font-semibold uppercase tracking-wider">Destination: {showSuccessScreen.destination}</p>
+              <div>
+                <h2 className="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">Successfully Joined!</h2>
+                <p className="text-primary-600 font-bold text-xl">"{showSuccessScreen.name}"</p>
+                <p className="text-slate-500 text-[11px] font-bold uppercase tracking-widest mt-3">Destination: {showSuccessScreen.destination}</p>
+              </div>
             </motion.div>
           </motion.div>
         )}
@@ -156,94 +158,97 @@ export default function JoinTripManualPage() {
 
       {/* Header */}
       <motion.div
-        className="text-center py-4"
-        initial={{ opacity: 0, y: -16 }}
+        className="text-center pt-8 pb-4"
+        initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
+        transition={{ duration: 0.5 }}
       >
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 flex-center text-3xl mx-auto mb-4 shadow-[0_4px_16px_rgba(124,92,255,0.35)] border border-white/10 select-none">
-          ✈️
+        <div className="w-20 h-20 rounded-[24px] bg-gradient-to-br from-primary-500 via-purple-500 to-pink-500 flex items-center justify-center text-4xl mx-auto mb-6 shadow-glow border border-white/40 select-none relative overflow-hidden group">
+          <div className="absolute inset-0 bg-white/20 blur-xl rounded-full scale-150 -translate-y-1/2 translate-x-1/4" />
+          <span className="relative z-10 group-hover:scale-110 transition-transform duration-300">✈️</span>
         </div>
-        <h1 className="text-2xl font-extrabold text-white tracking-tight uppercase">Join a Trip</h1>
-        <p className="text-dark-400 text-xs font-bold uppercase tracking-wider mt-1.5">Enter a travel folder invite code to connect</p>
+        <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight leading-none mb-3">Join a Trip</h1>
+        <p className="text-slate-500 text-sm font-medium">Enter a travel folder invite code to connect</p>
       </motion.div>
 
-      <GlassCard className="border-white/8 bg-dark-900/35 backdrop-blur-2xl">
-        <div className="space-y-6">
+      <GlassCard className="!p-8 border-white/60 bg-white/70 backdrop-blur-[30px] shadow-sm rounded-[32px]">
+        <div className="space-y-8">
           <div>
-            <label className="label text-[9px] tracking-wider mb-2">Invite Code / URL</label>
+            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] block mb-3 text-center">Invite Code / URL</label>
             <input
               value={code}
               onChange={handleInputChange}
-              placeholder="ENTER CODE OR PASTE LINK"
-              className="input input-lg font-mono text-center tracking-[0.15em] text-primary-400 text-base uppercase bg-dark-950/30 border-white/5 focus:border-primary-400"
+              placeholder="ENTER CODE OR LINK"
+              className="w-full glass-sm bg-white/80 border-white/80 focus:border-white focus:bg-white px-5 py-4 text-center font-mono tracking-[0.2em] text-primary-600 text-lg font-bold placeholder:text-slate-300 rounded-[20px] transition-all shadow-inner-sm uppercase"
               onKeyDown={e => e.key === 'Enter' && code && handleJoin()}
             />
             {error ? (
-              <p className="text-red-400 text-[10px] mt-2.5 text-center font-bold uppercase tracking-wider">{error}</p>
+              <p className="text-danger text-[11px] mt-3 text-center font-bold uppercase tracking-wider">{error}</p>
             ) : (
-              <p className="text-dark-500 text-[9px] mt-2 text-center font-bold uppercase tracking-wider">Paste the full HTTP link or the 12-char code</p>
+              <p className="text-slate-400 text-[10px] mt-3 text-center font-medium">Paste the full HTTP link or the 12-char code</p>
             )}
           </div>
 
-          <button
+          <motion.button
             onClick={() => handleJoin()}
             disabled={!code.trim() || mutation.isPending}
-            className="btn-primary btn w-full gap-2 py-3.5 rounded-xl transition-all duration-300 shadow-glow"
+            className="btn-primary w-full flex items-center justify-center gap-2 py-4 rounded-full shadow-glow disabled:opacity-50 disabled:shadow-none"
+            whileHover={{ scale: code.trim() && !mutation.isPending ? 1.02 : 1 }}
+            whileTap={{ scale: code.trim() && !mutation.isPending ? 0.98 : 1 }}
           >
-            {mutation.isPending ? <Spinner size="sm" /> : (
-              <span className="flex items-center justify-center gap-1.5 text-[10px] tracking-wider font-bold uppercase">
-                Connect Trip <ArrowRight size={13} className="stroke-[2.5]" />
+            {mutation.isPending ? <Spinner size="sm" className="border-white" /> : (
+              <span className="flex items-center justify-center gap-2 text-[12px] tracking-widest font-bold uppercase">
+                Connect Trip <ArrowRight size={16} className="stroke-[2.5]" />
               </span>
             )}
-          </button>
+          </motion.button>
         </div>
       </GlassCard>
 
       {/* Divider */}
-      <div className="flex items-center gap-4 px-2">
-        <div className="flex-1 h-px bg-white/5" />
-        <span className="text-dark-450 text-[9px] font-bold uppercase tracking-widest">or scan card</span>
-        <div className="flex-1 h-px bg-white/5" />
+      <div className="flex items-center gap-4 px-4 py-2">
+        <div className="flex-1 h-px bg-slate-200/60" />
+        <span className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">or scan</span>
+        <div className="flex-1 h-px bg-slate-200/60" />
       </div>
 
       {/* Scan QR Receipt */}
-      <GlassCard className="text-center space-y-4 border-white/5 bg-dark-900/35 backdrop-blur-2xl relative overflow-hidden">
-        <div className="w-12 h-12 bg-primary-500/10 rounded-xl flex-center mx-auto border border-primary-500/20 shadow-sm">
-          <QrCode size={18} className="text-primary-400" />
+      <GlassCard className="!p-8 text-center space-y-6 border-white/60 bg-white/70 backdrop-blur-[30px] shadow-sm rounded-[32px] overflow-hidden">
+        <div className="w-16 h-16 bg-primary-50 rounded-[20px] flex items-center justify-center mx-auto shadow-sm">
+          <QrCode size={24} className="text-primary-500" />
         </div>
         <div>
-          <h3 className="font-bold text-white text-xs uppercase tracking-wider">Upload Invite Card Screenshot</h3>
-          <p className="text-dark-400 text-[10px] leading-relaxed mt-1 font-medium">
-            Take a screenshot of the Trip QR Code / Invite and drag it below. OCR automatically extracts details.
+          <h3 className="font-bold text-slate-800 text-[13px] uppercase tracking-wider mb-2">Upload Invite Screenshot</h3>
+          <p className="text-slate-500 text-[11px] leading-relaxed font-medium px-4">
+            Take a screenshot of the Trip QR Code and upload it. We'll automatically extract the details.
           </p>
         </div>
 
-        <div className="relative border border-dashed border-white/10 hover:border-primary-400/50 rounded-xl p-5 text-center cursor-pointer transition-colors duration-300 bg-dark-950/10">
+        <div className="relative border-2 border-dashed border-slate-200 hover:border-primary-400 rounded-[24px] p-6 text-center cursor-pointer transition-colors duration-300 bg-slate-50/50 hover:bg-primary-50/50 group">
           <input 
             type="file" 
             accept="image/*" 
             onChange={handleQrUpload} 
-            className="absolute inset-0 opacity-0 cursor-pointer" 
+            className="absolute inset-0 opacity-0 cursor-pointer z-10" 
           />
-          <div className="flex flex-col items-center gap-2">
+          <div className="flex flex-col items-center gap-3">
             {scanning ? (
               <>
-                <RefreshCw size={20} className="text-primary-400 animate-spin" />
-                <p className="text-white text-[10px] font-bold uppercase tracking-wider">Scanning screenshot text...</p>
+                <RefreshCw size={24} className="text-primary-500 animate-spin" />
+                <p className="text-slate-600 text-[10px] font-bold uppercase tracking-wider">Scanning screenshot...</p>
               </>
             ) : (
               <>
-                <Upload size={18} className="text-dark-400" />
-                <p className="text-white text-[10px] font-bold uppercase tracking-wider">Drop or browse invite card</p>
+                <Upload size={24} className="text-slate-400 group-hover:text-primary-500 transition-colors" />
+                <p className="text-slate-600 text-[10px] font-bold uppercase tracking-wider">Drop or browse invite card</p>
               </>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5 p-3 glass-sm rounded-xl border-white/5 bg-dark-950/30">
-          <Link2 size={13} className="text-dark-450 flex-shrink-0" />
-          <p className="text-dark-450 text-[9px] font-semibold truncate flex-1 text-left uppercase tracking-wider">
+        <div className="flex items-center gap-3 p-4 glass-sm rounded-[16px] border-white/80 bg-white/50 shadow-sm">
+          <Link2 size={16} className="text-slate-400 flex-shrink-0 stroke-[2.5]" />
+          <p className="text-slate-500 text-[10px] font-bold flex-1 text-left uppercase tracking-wider">
             Copy-pasting the invite link will extract the code automatically
           </p>
         </div>
@@ -251,24 +256,24 @@ export default function JoinTripManualPage() {
 
       {/* Recent invitations history */}
       {recentInvites.length > 0 && (
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 text-dark-400 px-1 border-b border-white/5 pb-2.5">
-            <History size={12} />
-            <h3 className="text-[9px] font-bold uppercase tracking-widest">Recent Invitations</h3>
+        <div className="space-y-4 pt-4">
+          <div className="flex items-center justify-center gap-2 text-slate-400 px-4 mb-4">
+            <History size={14} className="stroke-[2.5]" />
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em]">Recent Invitations</h3>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {recentInvites.map((item) => (
               <div 
                 key={item.id} 
                 onClick={() => handleJoin(item.code)}
-                className="flex items-center justify-between p-3.5 bg-dark-900/20 border border-white/5 rounded-xl hover:border-primary-400/30 cursor-pointer transition-colors duration-300"
+                className="flex items-center justify-between p-4 bg-white/60 backdrop-blur-md border border-white/80 rounded-[20px] hover:bg-white hover:shadow-float cursor-pointer transition-all duration-300 shadow-sm group"
               >
-                <div className="min-w-0">
-                  <p className="text-white text-xs font-bold truncate leading-none">{item.name}</p>
-                  <p className="text-dark-400 text-[8px] font-bold uppercase tracking-widest mt-1.5">{item.destination}</p>
+                <div className="min-w-0 pr-4">
+                  <p className="text-slate-800 text-[13px] font-extrabold truncate group-hover:text-primary-600 transition-colors">{item.name}</p>
+                  <p className="text-slate-500 text-[9px] font-bold uppercase tracking-widest mt-1">{item.destination}</p>
                 </div>
                 <div className="text-right flex-shrink-0">
-                  <span className="text-primary-300 font-mono text-[9px] font-bold uppercase tracking-wider">{item.code}</span>
+                  <span className="text-primary-500 bg-primary-50 px-2 py-1 rounded-lg font-mono text-[10px] font-bold tracking-widest uppercase">{item.code}</span>
                 </div>
               </div>
             ))}
