@@ -1,6 +1,9 @@
 import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 import { Inbox } from 'lucide-react';
+import { TiltCard } from './TiltCard';
+
+export { TiltCard };
 
 export function GlassCard({ children, className, hover = false, onClick, animate = true }) {
   const Comp = animate ? motion.div : 'div';
@@ -9,16 +12,16 @@ export function GlassCard({ children, className, hover = false, onClick, animate
     animate: { opacity: 1, y: 0 },
     transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] },
     ...(hover && {
-      whileHover: { y: -4, scale: 1.005, borderColor: '#D0C6FF', boxShadow: '0 12px 40px rgba(109,74,255,0.12), 0 2px 8px rgba(109,74,255,0.06)' },
-      whileTap: { scale: 0.995 },
+      whileHover: { y: -4, scale: 1.01, boxShadow: '0 20px 50px rgba(0, 0, 0, 0.3)' },
+      whileTap: { scale: 0.98 },
     })
   } : {};
 
   return (
     <Comp
       className={clsx(
-        'bg-white border border-[#E9E2FF] rounded-[24px] p-6 transition-all duration-300 shadow-card text-[#1E1B4B]',
-        hover && 'cursor-pointer hover:bg-white',
+        'glass p-6 transition-all duration-300 text-white',
+        hover && 'cursor-pointer glass-hover',
         className
       )}
       onClick={onClick}
@@ -29,43 +32,38 @@ export function GlassCard({ children, className, hover = false, onClick, animate
   );
 }
 
-import { TiltCard } from './TiltCard';
-
-export { TiltCard };
-
-export function StatCard({ icon, label, value, sub, gradient = 'from-[#6D4AFF] to-[#8B5CF6]', trend, loading }) {
+export function StatCard({ icon, label, value, sub, gradient = 'from-indigo-500 to-purple-500', trend, loading }) {
   if (loading) {
     return (
-      <div className="bg-white border border-[#E9E2FF] p-6 rounded-[24px] flex flex-col gap-3 shadow-card">
-        <div className="skeleton h-9 w-9 rounded-xl" />
+      <div className="glass-sm p-4 sm:p-5 flex flex-col gap-3 shadow-sm">
+        <div className="skeleton h-10 w-10 rounded-[14px]" />
         <div className="skeleton h-4 w-20 rounded" />
-        <div className="skeleton h-7 w-28 rounded" />
+        <div className="skeleton h-8 w-28 rounded" />
       </div>
     );
   }
   return (
-    <TiltCard className="h-full" maxTilt={8}>
+    <TiltCard className="h-full" maxTilt={5}>
       <motion.div
-        className="bg-white border border-[#E9E2FF] p-6 rounded-[24px] flex flex-col gap-2 relative overflow-hidden group hover:border-[#D0C6FF] shadow-card hover:shadow-card-hover transition-all duration-500 cursor-default h-full text-[#1E1B4B]"
+        className="glass-sm p-4 sm:p-5 flex flex-col gap-2 relative overflow-hidden group hover:bg-white/15 transition-all duration-500 cursor-default h-full text-white"
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        whileHover={{ y: -3 }}
       >
-        <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-[#6D4AFF]/5 to-[#8B5CF6]/0 rounded-full blur-xl pointer-events-none group-hover:scale-125 transition-transform duration-700" />
+        <div className="absolute top-0 right-0 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none group-hover:scale-125 transition-transform duration-700" />
         
-        <div className={clsx('w-9 h-9 rounded-xl flex-center bg-gradient-to-br text-white shadow-sm border border-white/20', gradient)}>
+        <div className={clsx('w-10 h-10 sm:w-11 sm:h-11 rounded-[14px] flex items-center justify-center bg-gradient-to-br text-white shadow-glow flex-shrink-0', gradient)}>
           {typeof icon === 'string' ? (
-            <span className="text-sm">{icon}</span>
+            <span className="text-base">{icon}</span>
           ) : (
             icon
           )}
         </div>
-        <p className="text-[#6B5CA5] text-[10px] font-bold uppercase tracking-widest mt-1">{label}</p>
-        <p className="text-xl font-bold text-[#1E1B4B] tracking-tight mt-0.5">{value}</p>
-        {sub && <p className="text-[#6B5CA5] text-xs mt-1 font-medium">{sub}</p>}
+        <p className="text-slate-400 text-[10px] font-bold uppercase tracking-widest mt-1.5">{label}</p>
+        <p className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">{value}</p>
+        {sub && <p className="text-slate-300 text-[11px] mt-0.5 font-medium">{sub}</p>}
         {trend !== undefined && (
-          <p className={clsx('text-[10px] font-bold mt-1.5 flex items-center gap-1 uppercase tracking-wider', trend >= 0 ? 'text-green-600' : 'text-red-600')}>
+          <p className={clsx('text-[10px] font-bold mt-1 flex items-center gap-1 uppercase tracking-wider', trend >= 0 ? 'text-emerald-400' : 'text-rose-400')}>
             {trend >= 0 ? '↑' : '↓'} {Math.abs(trend)}%
           </p>
         )}
@@ -81,19 +79,17 @@ export function Avatar({ src, name, size = 'md', className }) {
     md: 'w-10 h-10 text-sm',
     lg: 'w-14 h-14 text-base',
     xl: 'w-20 h-20 text-xl',
-    '2xl': 'w-24 h-24 text-3xl'
+    '2xl': 'w-28 h-28 text-3xl'
   };
   const initials = name ? name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) : '?';
   const colors = [
-    'from-[#6D4AFF] to-[#8B5CF6]',
-    'from-[#8B5CF6] to-[#A855F7]',
-    'from-emerald-500 to-green-600',
-    'from-blue-500 to-indigo-600',
-    'from-amber-500 to-orange-600'
+    'from-indigo-500 to-purple-500',
+    'from-purple-500 to-pink-500',
+    'from-emerald-500 to-teal-500',
   ];
   const colorIndex = name ? name.charCodeAt(0) % colors.length : 0;
 
-  const baseClasses = 'rounded-full object-cover flex-shrink-0 flex items-center justify-center font-bold text-white shadow-sm ring-1 ring-black/5';
+  const baseClasses = 'rounded-full object-cover flex-shrink-0 flex items-center justify-center font-bold text-white shadow-sm ring-2 ring-white/30';
 
   if (src) {
     return <img src={src} alt={name} className={clsx(baseClasses, sizes[size], className)} />;
@@ -105,106 +101,59 @@ export function Avatar({ src, name, size = 'md', className }) {
   );
 }
 
-export function Badge({ children, variant = 'gray', className }) {
+export function Badge({ children, variant = 'primary', className }) {
   const variants = {
-    gray: 'bg-[#F3F0FF] text-[#6B5CA5] border border-[#E9E2FF]',
-    primary: 'bg-[#F3F0FF] text-[#6D4AFF] border border-[#EDE8FF]',
-    success: 'bg-[#DCFCE7] text-emerald-700 border border-emerald-200',
-    warning: 'bg-[#FEF3C7] text-amber-700 border border-amber-200',
-    danger: 'bg-[#FEE2E2] text-red-700 border border-red-200',
+    primary: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30',
+    success: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30',
+    warning: 'bg-amber-500/20 text-amber-300 border-amber-500/30',
+    danger:  'bg-rose-500/20 text-rose-300 border-rose-500/30',
+    gray:    'bg-white/10 text-slate-300 border-white/20',
   };
   return (
-    <span className={clsx(
-      'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold',
-      variants[variant],
-      className
-    )}>
+    <span className={clsx('inline-flex items-center px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider backdrop-blur-md border', variants[variant], className)}>
       {children}
     </span>
   );
 }
 
-export function LoadingSkeleton({ lines = 3, className }) {
+export function Spinner({ size = 'md', className }) {
+  const sizes = { sm: 'w-4 h-4 border-2', md: 'w-8 h-8 border-3', lg: 'w-12 h-12 border-4' };
   return (
-    <div className={clsx('space-y-2.5 animate-pulse', className)}>
-      {Array.from({ length: lines }).map((_, i) => (
-        <div key={i} className={clsx('skeleton h-3.5 rounded-lg', i === 0 ? 'w-3/4' : i === lines - 1 ? 'w-1/2' : 'w-full')} />
-      ))}
+    <div className={clsx('border-indigo-400/30 border-t-indigo-400 rounded-full animate-spin', sizes[size], className)} />
+  );
+}
+
+export function ProgressBar({ value, max = 100, color = 'primary', className }) {
+  const pct = Math.min(100, Math.max(0, (value / max) * 100));
+  const colors = {
+    primary: 'bg-gradient-to-r from-indigo-500 to-purple-500',
+    secondary: 'bg-gradient-to-r from-cyan-400 to-blue-500',
+    accent: 'bg-gradient-to-r from-amber-400 to-orange-500',
+    danger: 'bg-gradient-to-r from-rose-500 to-red-600',
+    success: 'bg-gradient-to-r from-emerald-400 to-green-500',
+  };
+
+  return (
+    <div className={clsx('w-full bg-white/10 rounded-full overflow-hidden h-2 border border-white/10', className)}>
+      <div
+        className={clsx('h-full rounded-full transition-all duration-700 ease-out shadow-glow-sm', colors[color])}
+        style={{ width: `${pct}%` }}
+      />
     </div>
   );
 }
 
 export function EmptyState({ icon, title, description, action }) {
   return (
-    <motion.div
-      className="empty-state py-12"
-      initial={{ opacity: 0, scale: 0.97 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <div className="mb-4 flex-center">
-        {typeof icon === 'string' ? (
-          <span className="text-5xl select-none">{icon || '📭'}</span>
-        ) : (
-          <div className="w-16 h-16 rounded-2xl bg-[#F3F0FF] border border-[#E9E2FF] flex-center">
-            {icon || <Inbox size={28} className="text-[#6D4AFF]" />}
-          </div>
-        )}
+    <div className="glass p-12 text-center flex flex-col items-center justify-center gap-4">
+      <div className="w-16 h-16 rounded-[24px] bg-white/10 border border-white/20 flex items-center justify-center shadow-lg">
+        {icon || <Inbox size={32} className="text-indigo-400" />}
       </div>
-      <h3 className="text-[#1E1B4B] font-bold text-sm mb-1.5 tracking-tight">{title}</h3>
-      {description && <p className="text-[#6B5CA5] text-xs max-w-[260px] mb-6 leading-relaxed font-medium">{description}</p>}
-      {action}
-    </motion.div>
-  );
-}
-
-export function Spinner({ size = 'md', className }) {
-  const sizes = { sm: 'w-4 h-4 border-2', md: 'w-8 h-8 border-[2.5px]', lg: 'w-12 h-12 border-3' };
-  return (
-    <div className={clsx('rounded-full border-[#6D4AFF] border-t-transparent animate-spin', sizes[size], className)} />
-  );
-}
-
-export function ProgressBar({ value, max = 100, className, color = 'primary' }) {
-  const pct = Math.min(100, (value / max) * 100);
-  const colors = {
-    primary: 'bg-gradient-to-r from-[#6D4AFF] via-[#8B5CF6] to-[#A855F7]',
-    success: 'bg-gradient-to-r from-green-500 to-emerald-500',
-    danger: 'bg-gradient-to-r from-red-500 to-rose-500',
-    warning: 'bg-gradient-to-r from-amber-500 to-orange-500'
-  };
-  return (
-    <div className={clsx('h-2 bg-[#F3F0FF] border border-[#E9E2FF] rounded-full overflow-hidden relative', className)}>
-      <motion.div
-        className={clsx('h-full rounded-full relative', colors[color])}
-        initial={{ width: 0 }}
-        animate={{ width: `${pct}%` }}
-        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <span className="absolute right-0 top-0 bottom-0 w-1 bg-white/40 blur-xs rounded-full" />
-      </motion.div>
-    </div>
-  );
-}
-
-export function Tooltip({ children, content }) {
-  return (
-    <div className="group relative inline-flex">
-      {children}
-      <div className="absolute -top-9 left-1/2 -translate-x-1/2 px-2.5 py-1 bg-white border border-[#E9E2FF] rounded-lg text-[10px] font-bold uppercase tracking-wider text-[#1E1B4B] whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none z-50 shadow-card">
-        {content}
+      <div>
+        <h3 className="text-xl font-extrabold text-white tracking-tight">{title}</h3>
+        {description && <p className="text-slate-400 text-sm mt-1.5 max-w-sm leading-relaxed font-medium">{description}</p>}
       </div>
-    </div>
-  );
-}
-
-export function Divider({ label }) {
-  if (!label) return <div className="divider" />;
-  return (
-    <div className="flex items-center gap-4 my-5">
-      <div className="flex-1 h-px bg-[#E9E2FF]" />
-      <span className="text-[#6B5CA5] text-[9px] font-bold uppercase tracking-widest">{label}</span>
-      <div className="flex-1 h-px bg-[#E9E2FF]" />
+      {action && <div className="mt-2">{action}</div>}
     </div>
   );
 }
