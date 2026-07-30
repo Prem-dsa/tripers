@@ -1,9 +1,10 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 import {
-  LayoutDashboard, Plane, Receipt, BarChart3,
-  LogOut, X, ChevronLeft, Wallet, Compass, MapPin, User, Settings,
+  LayoutDashboard, Compass, Receipt, Wallet, BarChart3,
+  LogOut, MapPin, User, ChevronLeft, ChevronRight, Plane
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useUIStore } from '../../store/uiStore';
@@ -13,20 +14,17 @@ import toast from 'react-hot-toast';
 
 const navItems = [
   { to: '/dashboard',   icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/trips',       icon: Plane,            label: 'My Trips' },
-  { to: '/expenses',    icon: Receipt,          label: 'Expenses' },
-  { to: '/settlements', icon: Wallet,           label: 'Settlements' },
-  { to: '/analytics',   icon: BarChart3,        label: 'Analytics' },
-  { to: '/explore',     icon: Compass,          label: 'Explore' },
-];
-
-const bottomItems = [
-  { to: '/profile', icon: User, label: 'Profile' },
+  { to: '/explore',     icon: Compass,         label: 'Explore' },
+  { to: '/trips',       icon: Plane,           label: 'Trips' },
+  { to: '/expenses',    icon: Receipt,         label: 'Expenses' },
+  { to: '/settlements', icon: Wallet,          label: 'Settlements' },
+  { to: '/analytics',   icon: BarChart3,       label: 'Analytics' },
+  { to: '/profile',     icon: User,            label: 'Profile' },
 ];
 
 export function Sidebar() {
   const { user, logout } = useAuthStore();
-  const { sidebarOpen, toggleSidebar, sidebarMobile, toggleMobileSidebar } = useUIStore();
+  const { sidebarOpen, toggleSidebar } = useUIStore();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
@@ -36,213 +34,115 @@ export function Sidebar() {
     toast.success('Logged out successfully');
   };
 
-  const SidebarContent = ({ isMobile = false }) => (
-    <div className="h-full flex flex-col justify-between py-2">
-      <div>
-        {/* Logo */}
-        <div className="pb-5 mb-4 border-b border-slate-200 flex items-center justify-between px-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#4F46E5] to-[#06B6D4] flex-center shadow-glow-sm flex-shrink-0 animate-float">
-              <MapPin size={18} className="text-white stroke-[2.5]" />
-            </div>
-            <AnimatePresence>
-              {(sidebarOpen || isMobile) && (
-                <motion.div
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -8 }}
-                  transition={{ duration: 0.2 }}
-                >
-                  <p className="font-extrabold text-[#0F172A] text-sm leading-none tracking-tight">Tripers</p>
-                  <p className="text-[#4F46E5] text-[9px] font-bold tracking-wider mt-1">Split Smarter.</p>
-                </motion.div>
+  return (
+    <motion.aside
+      className={clsx(
+        'hidden md:flex flex-col h-full flex-shrink-0 z-30 py-3 pl-3 transition-all duration-300',
+        sidebarOpen ? 'w-[240px] xl:w-[260px]' : 'w-[80px]'
+      )}
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+    >
+      <div className="bg-slate-900/90 backdrop-blur-[36px] border border-white/20 h-full rounded-[32px] flex flex-col py-4 px-3 shadow-2xl relative overflow-hidden text-white">
+        {/* Ambient Glows */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/15 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative z-10 flex flex-col h-full gap-2">
+          {/* Logo & Toggle */}
+          <div className={clsx(
+            'px-2 pb-3 mb-1 flex items-center justify-between border-b border-white/10',
+            !sidebarOpen && 'justify-center'
+          )}>
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-[14px] bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-glow flex-shrink-0">
+                <MapPin size={18} className="text-white stroke-[2.5]" />
+              </div>
+              {sidebarOpen && (
+                <div className="min-w-0">
+                  <p className="font-extrabold text-white text-[17px] tracking-tight leading-none truncate">Tripers</p>
+                  <p className="text-indigo-400/80 text-[9px] font-bold tracking-[0.2em] mt-1 uppercase truncate">Liquid Glass</p>
+                </div>
               )}
-            </AnimatePresence>
-          </div>
-          {!isMobile && (
+            </div>
+
+            {/* Collapse Toggle for Tablet / Desktop */}
             <button
               onClick={toggleSidebar}
-              className="hidden lg:flex btn-icon text-slate-500 hover:text-[#4F46E5]"
+              className="hidden lg:flex w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 items-center justify-center text-slate-400 hover:text-white transition-colors flex-shrink-0"
+              title={sidebarOpen ? 'Collapse sidebar' : 'Expand sidebar'}
             >
-              <ChevronLeft size={16} className={clsx('transition-transform duration-300', !sidebarOpen && 'rotate-180')} />
+              {sidebarOpen ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
             </button>
-          )}
-        </div>
+          </div>
 
-        {/* Navigation */}
-        <nav className="space-y-1.5 overflow-y-auto no-scrollbar px-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              onClick={isMobile ? toggleMobileSidebar : undefined}
-              className={({ isActive }) => clsx(
-                'relative group flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-300 min-h-[46px] overflow-hidden',
-                isActive
-                  ? 'text-white font-semibold'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-[#4F46E5]'
-              )}
-            >
-              {({ isActive }) => (
-                <>
-                  <item.icon
-                    size={18}
-                    className={clsx(
-                      'flex-shrink-0 transition-all duration-300 z-10',
-                      isActive ? 'text-white' : 'text-slate-500 group-hover:text-[#4F46E5]'
+          {/* Navigation */}
+          <nav className="space-y-1 flex-1 overflow-y-auto no-scrollbar px-0.5">
+            {navItems.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                title={!sidebarOpen ? item.label : undefined}
+                className={({ isActive }) => clsx(
+                  'relative group flex items-center gap-3 px-3 py-3 rounded-[18px] transition-all duration-200 min-h-[48px]',
+                  !sidebarOpen && 'justify-center px-0',
+                  isActive
+                    ? 'text-white font-bold'
+                    : 'text-slate-400 font-medium hover:bg-white/8 hover:text-white'
+                )}
+              >
+                {({ isActive }) => (
+                  <>
+                    <item.icon
+                      size={18}
+                      className={clsx(
+                        'flex-shrink-0 transition-all duration-200 z-10',
+                        isActive ? 'text-indigo-400 stroke-[2.5]' : 'text-slate-400 group-hover:text-slate-200 stroke-2'
+                      )}
+                    />
+                    {sidebarOpen && (
+                      <span className="text-[13px] z-10 tracking-wide flex-1 truncate">{item.label}</span>
                     )}
-                  />
-                  <AnimatePresence>
-                    {(sidebarOpen || isMobile) && (
-                      <motion.span
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="text-[13px] font-semibold z-10 truncate"
-                      >
-                        {item.label}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                  {isActive && (
-                    <>
+                    {isActive && (
                       <motion.div
-                        layoutId={isMobile ? "activePillMobile" : "activePill"}
-                        className="absolute inset-0 bg-gradient-to-r from-[#4F46E5] to-[#06B6D4] shadow-glow-sm"
-                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                        layoutId="activeSidebarNavBg"
+                        className="absolute inset-0 bg-gradient-to-r from-indigo-500/25 to-purple-500/15 rounded-[18px] border border-indigo-400/30"
+                        transition={{ type: 'spring', stiffness: 300, damping: 28 }}
                       />
-                      <motion.div
-                        layoutId={isMobile ? "activeLineMobile" : "activeLine"}
-                        className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-white rounded-r-md z-20"
-                        transition={{ type: 'spring', stiffness: 380, damping: 30 }}
-                      />
-                    </>
-                  )}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-
-      {/* Bottom Area */}
-      <div className="space-y-3 px-1">
-        <div className="border-t border-slate-200 pt-3 space-y-1.5">
-          {bottomItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end
-              onClick={isMobile ? toggleMobileSidebar : undefined}
-              className={({ isActive }) => clsx(
-                'relative group flex items-center gap-3 px-3.5 py-3 rounded-xl transition-all duration-300 min-h-[46px] overflow-hidden',
-                isActive
-                  ? 'text-white font-semibold'
-                  : 'text-slate-500 hover:bg-slate-50 hover:text-[#4F46E5]'
-              )}
-            >
-              {({ isActive }) => (
-                <>
-                  <item.icon
-                    size={18}
-                    className={clsx(
-                      'flex-shrink-0 z-10 transition-all duration-300',
-                      isActive ? 'text-white' : 'text-slate-500 group-hover:text-[#4F46E5]'
                     )}
-                  />
-                  <AnimatePresence>
-                    {(sidebarOpen || isMobile) && (
-                      <motion.span initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="text-[13px] font-semibold z-10 truncate">
-                        {item.label}
-                      </motion.span>
-                    )}
-                  </AnimatePresence>
-                  {isActive && (
-                    <>
-                      <motion.div layoutId={isMobile ? "activePillBottomMobile" : "activePillBottom"} className="absolute inset-0 bg-gradient-to-r from-[#4F46E5] to-[#06B6D4] shadow-glow-sm" transition={{ type: 'spring', stiffness: 380, damping: 30 }} />
-                      <motion.div layoutId={isMobile ? "activeLineBottomMobile" : "activeLineBottom"} className="absolute left-0 top-1/4 bottom-1/4 w-1 bg-white rounded-r-md z-20" transition={{ type: 'spring', stiffness: 380, damping: 30 }} />
-                    </>
-                  )}
-                </>
+                  </>
+                )}
+              </NavLink>
+            ))}
+          </nav>
+
+          {/* User Card */}
+          <div className="pt-2 border-t border-white/10 mt-auto">
+            <div className={clsx(
+              'p-2 rounded-[20px] bg-white/8 border border-white/15 flex items-center gap-2.5 hover:bg-white/12 transition-all duration-200',
+              !sidebarOpen && 'justify-center p-1.5'
+            )}>
+              <Avatar src={user?.photo} name={user?.fullName} size="sm" className="ring-2 ring-indigo-400/50 flex-shrink-0" />
+              {sidebarOpen && (
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-[12px] font-bold truncate leading-none">{user?.fullName}</p>
+                  <p className="text-indigo-300 text-[10px] font-medium truncate mt-0.5">@{user?.username}</p>
+                </div>
               )}
-            </NavLink>
-          ))}
-        </div>
-
-        {/* User Card */}
-        <div className={clsx('p-2.5 rounded-2xl border border-slate-200 bg-slate-50 flex items-center gap-2.5 transition-all duration-300', !(sidebarOpen || isMobile) && 'justify-center')}>
-          <Avatar src={user?.photo} name={user?.fullName} size="sm" className="ring-2 ring-slate-100 flex-shrink-0" />
-          <AnimatePresence>
-            {(sidebarOpen || isMobile) && (
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex-1 min-w-0">
-                <p className="text-[#0F172A] text-xs font-bold truncate leading-none">{user?.fullName}</p>
-                <p className="text-slate-500 text-[10px] truncate mt-1">@{user?.username}</p>
-              </motion.div>
-            )}
-          </AnimatePresence>
-          {(sidebarOpen || isMobile) && (
-            <button
-              onClick={handleLogout}
-              className="btn-icon w-8 h-8 hover:bg-red-50 hover:text-red-600 text-slate-500 flex-shrink-0"
-              title="Logout"
-            >
-              <LogOut size={14} />
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-
-  return (
-    <>
-      {/* Desktop Sidebar */}
-      <motion.aside
-        className="hidden lg:flex flex-col h-screen p-4 flex-shrink-0 z-35 bg-white border-r border-slate-200 shadow-sm"
-        animate={{ width: sidebarOpen ? 260 : 80 }}
-        transition={{ type: 'spring', damping: 26, stiffness: 240 }}
-      >
-        <SidebarContent />
-      </motion.aside>
-
-      {/* Mobile Drawer Sidebar */}
-      <AnimatePresence>
-        {sidebarMobile && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 0.4 }}
-              exit={{ opacity: 0 }}
-              onClick={toggleMobileSidebar}
-              className="fixed inset-0 bg-black z-40 lg:hidden"
-            />
-            {/* Slide-in Drawer */}
-            <motion.aside
-              initial={{ x: '-100%' }}
-              animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
-              transition={{ type: 'tween', duration: 0.25, ease: 'easeOut' }}
-              className="fixed inset-y-0 left-0 w-72 bg-white p-4 z-50 lg:hidden shadow-2xl flex flex-col border-r border-slate-200"
-            >
-              {/* Header Close button */}
-              <div className="absolute top-4 right-4 z-10">
+              {sidebarOpen && (
                 <button
-                  onClick={toggleMobileSidebar}
-                  className="btn-icon text-slate-500 hover:text-[#4F46E5] hover:bg-slate-50"
+                  onClick={handleLogout}
+                  className="w-7 h-7 rounded-full flex items-center justify-center bg-white/10 hover:bg-rose-500/20 hover:text-rose-300 text-slate-400 transition-colors flex-shrink-0"
+                  title="Logout"
                 >
-                  <X size={18} />
+                  <LogOut size={13} className="stroke-[2.5]" />
                 </button>
-              </div>
-
-              {/* Sidebar Content */}
-              <div className="flex-1 mt-2">
-                <SidebarContent isMobile={true} />
-              </div>
-            </motion.aside>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.aside>
   );
 }
