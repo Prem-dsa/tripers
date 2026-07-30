@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { UserMinus, Shield, Plus, Mail, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { clsx } from 'clsx';
 import { tripApi } from '../../api';
 import { Avatar, Badge, EmptyState, ProgressBar } from '../ui/index';
@@ -9,6 +10,8 @@ import { formatCurrency } from '../../utils/currency';
 import { useAuthStore } from '../../store/authStore';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+
+const inputClass = 'w-full bg-white/50 border border-white/80 focus:border-primary-300 focus:bg-white/90 px-5 py-3.5 text-[14px] font-medium text-slate-800 placeholder:text-slate-400 rounded-[16px] transition-all shadow-sm outline-none';
 
 export default function MembersTab({ trip, memberStats, isAdmin }) {
   const { user } = useAuthStore();
@@ -56,38 +59,40 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
   const totalExpense = memberStats.reduce((s, m) => s + (m.stats?.totalPaid || 0), 0) || 1;
 
   return (
-    <div className="space-y-6 text-[#0F172A]">
+    <div className="space-y-6">
       {/* Invite Member Section */}
       {isAdmin && (
-        <form onSubmit={handleAddMember} className="bg-white border border-slate-200 p-5 rounded-[22px] space-y-3.5 shadow-sm relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-[#4F46E5]/5 rounded-full blur-2xl pointer-events-none" />
-          <h4 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Invite Traveler by Email or Username</h4>
-          <div className="flex gap-3">
-            <div className="relative flex-1">
-              <Mail size={13} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" />
+        <form onSubmit={handleAddMember} className="bg-white/70 backdrop-blur-[30px] border border-white/60 p-6 rounded-[28px] space-y-4 shadow-sm relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-40 h-40 bg-primary-100 rounded-full blur-[60px] opacity-40 pointer-events-none" />
+          <h4 className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Invite Traveler by Email or Username</h4>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-1 group">
+              <Mail size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary-500 transition-colors" />
               <input
                 type="text"
                 value={emailOrUsername}
                 onChange={(e) => setEmailOrUsername(e.target.value)}
                 placeholder="Enter email or username..."
-                className="input flex-1 pl-10 py-2.5 text-xs bg-slate-50 border-slate-200 focus:border-[#4F46E5]"
+                className={`${inputClass} pl-12`}
                 required
               />
             </div>
-            <button
+            <motion.button
               type="submit"
               disabled={addMutation.isPending}
-              className="btn-primary btn text-[10px] tracking-wider font-bold py-2.5 px-5 rounded-xl shadow-glow-sm"
+              className="btn-primary rounded-full py-3.5 px-7 text-[12px] uppercase font-bold tracking-widest shadow-glow flex items-center justify-center gap-2 flex-shrink-0"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              {addMutation.isPending ? 'Inviting...' : <><Plus size={12} className="stroke-[2.5]" /> Invite</>}
-            </button>
+              {addMutation.isPending ? 'Inviting...' : <><Plus size={14} className="stroke-[2.5]" /> Invite</>}
+            </motion.button>
           </div>
         </form>
       )}
 
       {/* Grid of travelers */}
       {!memberStats.length ? (
-        <EmptyState icon={<Users size={32} className="text-[#4F46E5]" />} title="No travelers" />
+        <EmptyState icon={<Users size={32} className="text-primary-500" />} title="No travelers" />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {memberStats.map((ms) => {
@@ -96,21 +101,25 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
             const isCreator = trip.createdBy?._id === ms.user?._id;
             const netBal = ms.stats?.netBalance || 0;
             const contributionPct = totalExpense > 0 ? ((ms.stats?.totalPaid || 0) / totalExpense * 100) : 0;
-
             const isOnline = ms.user?._id === user?._id || Math.abs(ms.user?.fullName.charCodeAt(0) || 0) % 2 === 0;
 
             return (
-              <div key={ms.user?._id} className="bg-white border border-slate-200 p-5 rounded-[22px] flex flex-col justify-between hover:border-slate-300 hover:shadow-card transition-all duration-300 shadow-sm relative group">
+              <motion.div
+                key={ms.user?._id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white/70 backdrop-blur-[30px] border border-white/60 p-6 rounded-[28px] flex flex-col justify-between hover:shadow-float hover:bg-white transition-all duration-300 shadow-sm relative group"
+              >
                 <div className="flex items-start justify-between gap-4">
                   <button onClick={() => navigate(`/members/${ms.user?._id}`)} className="flex-shrink-0 relative">
                     <Avatar
                       src={ms.user?.photo}
                       name={ms.user?.fullName}
                       size="lg"
-                      className="ring-2 ring-slate-100 hover:ring-[#4F46E5]/30 transition-all rounded-full"
+                      className="ring-2 ring-white/80 hover:ring-primary-300 transition-all"
                     />
                     {isOnline && (
-                      <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#22C55E] rounded-full ring-2 ring-white shadow-[0_0_8px_rgba(34,197,94,0.4)]" title="Online" />
+                      <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-success rounded-full ring-2 ring-white shadow-glow" title="Online" />
                     )}
                   </button>
 
@@ -118,16 +127,16 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <button
                         onClick={() => navigate(`/members/${ms.user?._id}`)}
-                        className="text-[#0F172A] text-xs font-bold hover:text-[#4F46E5] transition-colors truncate max-w-[130px]"
+                        className="text-slate-800 text-[13px] font-bold hover:text-primary-500 transition-colors truncate max-w-[130px]"
                       >
                         {ms.user?.fullName}
                       </button>
-                      {isCreator && <Badge variant="primary" className="text-[7px]">Creator</Badge>}
-                      {role === 'admin' && !isCreator && <Badge variant="warning" className="text-[7px]">Admin</Badge>}
-                      {ms.user?._id === user?._id && <Badge variant="gray" className="text-[7px]">You</Badge>}
+                      {isCreator && <Badge variant="primary" className="text-[8px]">Creator</Badge>}
+                      {role === 'admin' && !isCreator && <Badge variant="warning" className="text-[8px]">Admin</Badge>}
+                      {ms.user?._id === user?._id && <Badge variant="gray" className="text-[8px]">You</Badge>}
                     </div>
-                    <p className="text-slate-500 text-[9px] font-bold uppercase tracking-wider mt-1.5">@{ms.user?.username}</p>
-                    {ms.user?.phone && <p className="text-slate-500 text-[9px] mt-1">{ms.user.phone}</p>}
+                    <p className="text-slate-400 text-[10px] font-bold uppercase tracking-wider mt-1">@{ms.user?.username}</p>
+                    {ms.user?.phone && <p className="text-slate-400 text-[10px] mt-1 font-medium">{ms.user.phone}</p>}
                   </div>
 
                   {/* Admin actions */}
@@ -136,19 +145,19 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
                       {!isCreator && role !== 'admin' && (
                         <button
                           onClick={() => adminMutation.mutate(ms.user?._id)}
-                          className="btn-icon w-8 h-8 rounded-lg hover:bg-slate-50 hover:border-slate-200 text-slate-500 hover:text-[#4F46E5]"
+                          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-primary-50 text-slate-400 hover:text-primary-500 transition-colors"
                           title="Assign Admin"
                         >
-                          <Shield size={12} />
+                          <Shield size={14} />
                         </button>
                       )}
                       {!isCreator && (
                         <button
                           onClick={() => setRemoveTarget(ms.user)}
-                          className="btn-icon w-8 h-8 rounded-lg hover:bg-red-50 hover:border-red-200 text-slate-500 hover:text-red-600"
+                          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-danger/10 text-slate-400 hover:text-danger transition-colors"
                           title="Remove Member"
                         >
-                          <UserMinus size={12} />
+                          <UserMinus size={14} />
                         </button>
                       )}
                     </div>
@@ -156,18 +165,18 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
                 </div>
 
                 {/* Balance statistics */}
-                <div className="mt-4 grid grid-cols-3 gap-2.5 text-center">
-                  <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                    <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Paid</p>
-                    <p className="text-[#0F172A] font-extrabold text-xs mt-1">₹{formatCurrency(ms.stats?.totalPaid)}</p>
+                <div className="mt-5 grid grid-cols-3 gap-2.5 text-center">
+                  <div className="bg-white/60 border border-white/80 p-2.5 rounded-[16px]">
+                    <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest">Paid</p>
+                    <p className="text-slate-800 font-extrabold text-xs mt-1">₹{formatCurrency(ms.stats?.totalPaid)}</p>
                   </div>
-                  <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                    <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Share</p>
-                    <p className="text-[#0F172A] font-extrabold text-xs mt-1">₹{formatCurrency(ms.stats?.totalShare)}</p>
+                  <div className="bg-white/60 border border-white/80 p-2.5 rounded-[16px]">
+                    <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest">Share</p>
+                    <p className="text-slate-800 font-extrabold text-xs mt-1">₹{formatCurrency(ms.stats?.totalShare)}</p>
                   </div>
-                  <div className="bg-slate-50 border border-slate-200 p-2 rounded-xl">
-                    <p className="text-slate-500 text-[8px] font-bold uppercase tracking-widest">Net</p>
-                    <p className={clsx('font-extrabold text-xs mt-1', netBal >= 0 ? 'text-green-600' : 'text-red-600')}>
+                  <div className="bg-white/60 border border-white/80 p-2.5 rounded-[16px]">
+                    <p className="text-slate-400 text-[9px] font-bold uppercase tracking-widest">Net</p>
+                    <p className={clsx('font-extrabold text-xs mt-1', netBal >= 0 ? 'text-success' : 'text-danger')}>
                       {netBal >= 0 ? '+' : ''}₹{formatCurrency(Math.abs(netBal))}
                     </p>
                   </div>
@@ -175,15 +184,15 @@ export default function MembersTab({ trip, memberStats, isAdmin }) {
 
                 {/* Contribution bar */}
                 {ms.stats?.totalPaid > 0 && (
-                  <div className="mt-3.5 pt-3.5 border-t border-slate-200">
-                    <div className="flex justify-between text-[8px] font-bold text-slate-500 uppercase tracking-widest mb-1.5">
-                      <span>Travel share contribution</span>
+                  <div className="mt-4 pt-3.5 border-t border-slate-200/60">
+                    <div className="flex justify-between text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">
+                      <span>Travel share</span>
                       <span>{contributionPct.toFixed(1)}%</span>
                     </div>
                     <ProgressBar value={ms.stats.totalPaid} max={totalExpense} color="primary" />
                   </div>
                 )}
-              </div>
+              </motion.div>
             );
           })}
         </div>
